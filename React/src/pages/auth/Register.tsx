@@ -1,21 +1,67 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+// URL da API do backend Spring Boot (vem do .env)
+const API_URL = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_REGISTER as string;
+
 
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
-  const { signUp, loading } = useAuth();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setNome] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signUp(email, password, nome);
+    setErrorMsg("");
+    
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          confirmPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao registrar usuário.");
+      }
+
+      alert("Conta criada com sucesso!");
+      navigate("/auth/login")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg("Erro desconhecido ao registrar.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +80,7 @@ export default function Register() {
               <Input
                 id="nome"
                 placeholder="Seu nome completo"
-                value={nome}
+                value={name}
                 onChange={(e) => setNome(e.target.value)}
                 required
               />
@@ -60,10 +106,21 @@ export default function Register() {
                 required
                 minLength={6}
               />
-              <p className="text-xs text-muted-foreground">
-                Mínimo de 6 caracteres
-              </p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmação de Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            {errorMsg && (
+              <p className="text-sm text-red-500">{errorMsg}</p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
@@ -71,10 +128,7 @@ export default function Register() {
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Já tem uma conta?{" "}
-              <Link
-                to="/auth/login"
-                className="text-primary hover:underline"
-              >
+              <Link to="/auth/login" className="text-primary hover:underline">
                 Faça login
               </Link>
             </div>

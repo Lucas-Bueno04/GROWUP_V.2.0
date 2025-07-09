@@ -12,12 +12,15 @@ import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_LOGIN as string;
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, loading, user } = useAuth();
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   const { setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -26,71 +29,39 @@ export default function Login() {
   }, [setTheme]);
 
   // Redirecionamento se já logado
-  useEffect(() => {
-    console.log('Login: checking auth state - user:', !!user, 'loading:', loading);
-    if (user && !loading) {
-      console.log('Login: Usuário já logado, redirecionando para dashboard');
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, loading, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     
-    if (isSubmitting) return;
-    
-    setError(null);
-    setIsSubmitting(true);
-    
+    setLoading(true);
     try {
-      console.log('Login: Tentando fazer login...');
-      await signIn(email, password);
-      console.log('Login: Login realizado com sucesso');
-      // O redirecionamento será feito pelo useEffect quando o user for atualizado
-    } catch (error: any) {
-      console.error("Login error:", error);
-      
-      let errorMessage = "Erro no login. Verifique suas credenciais.";
-      
-      if (error?.message) {
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = "Email ou senha inválidos.";
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = "Email não confirmado. Verifique sua caixa de entrada.";
-        } else if (error.message.includes('Too many requests')) {
-          errorMessage = "Muitas tentativas. Tente novamente em alguns minutos.";
-        }
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erro ao realizar Login.");
       }
-      
-      setError(errorMessage);
-      setIsSubmitting(false);
+
+      navigate("/dashboard")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg("Erro desconhecido ao realizar Login.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
-
-  // Loading state durante inicialização
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se já logado, mostra loading de redirecionamento
-  if (user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Redirecionando...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="absolute top-3 right-3 z-10">
