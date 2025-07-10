@@ -20,10 +20,10 @@ const API_URL = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_REGISTER as string
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [role, setRole] = useState("ROLE_CUSTOMER"); 
 
   const navigate = useNavigate();
 
@@ -39,10 +39,10 @@ export default function Register() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
-          password,
-          confirmPassword,
+          "name":name,
+          "email":email,
+          "password":password,
+          "role":role
         }),
       });
 
@@ -52,7 +52,7 @@ export default function Register() {
       }
 
       alert("Conta criada com sucesso!");
-      navigate("/auth/login")
+      navigate("/login")
     } catch (error: unknown) {
       if (error instanceof Error) {
         setErrorMsg(error.message);
@@ -103,17 +103,6 @@ export default function Register() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmação de Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
               />

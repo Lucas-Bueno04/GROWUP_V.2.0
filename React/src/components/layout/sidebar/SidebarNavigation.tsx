@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   BarChart3, 
   File, 
@@ -23,27 +23,18 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { SidebarSection } from "./SidebarSection";
 import { SidebarItem } from "./SidebarItem";
+import { JwtService } from "@/components/auth/GetAuthParams";
 
 export const SidebarNavigation = () => {
-  const { user, loading } = useAuth();
-  
-  console.log('SidebarNavigation: loading:', loading, 'user:', !!user, 'userRole:', user?.role);
-  
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-300 rounded w-1/2"></div>
-          <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-        </div>
-      </div>
-    );
-  }
 
-  // Verificação de role
-  const isMentor = user?.role === 'mentor';
-  console.log('SidebarNavigation: isMentor:', isMentor, 'userRole:', user?.role);
+  const[isMentor , setIsMentor] = useState(false);
+  
+
+  useEffect(() => {
+      const jwtService = new JwtService();
+      setIsMentor(jwtService.hasRoles(["ROLE_ADMINISTRATOR"]))
+    }, []);
+    
 
   return (
     <>
@@ -164,13 +155,7 @@ export const SidebarNavigation = () => {
         </SidebarSection>
       )}
       
-      {/* Debug info - remover após testes */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="p-2 mt-4 text-xs text-gray-500 border-t">
-          <div>User Role: {user?.role || 'undefined'}</div>
-          <div>Is Mentor: {isMentor ? 'Yes' : 'No'}</div>
-        </div>
-      )}
+      
     </>
   );
 };

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Role = 'aluno' | 'dependente' | 'mentor';
+type Role = "ROLE_CUSTOMER" | "ROLE_ADMINISTRATOR";
 
 type SidebarSectionProps = {
   title?: string | ReactNode;

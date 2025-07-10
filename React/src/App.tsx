@@ -4,8 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { HelmetProvider } from "@/components/shared/HelmetProvider";
-import { AuthProvider } from "@/hooks/auth/AuthProvider";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { Layout } from "@/components/layout/Layout";
 
 // Páginas públicas
@@ -41,12 +39,12 @@ import AdminAcessos from "@/pages/AdminAcessos";
 import ConfiguracaoSistema from "@/pages/ConfiguracaoSistema";
 import PlanoContasUnifiedPage from "@/pages/mentor/PlanoContasUnifiedPage";
 import PainelIndicadores from "@/pages/mentor/PainelIndicadores";
+import { AuthGuard } from "./components/auth/AuthGuard";
 
 function App() {
   return (
     <Router>
       <HelmetProvider>
-        <AuthProvider>
           <QueryProvider>
             <ThemeProvider>
               <div className="min-h-screen bg-background text-foreground">
@@ -62,28 +60,27 @@ function App() {
                   {/* Rotas protegidas - Básicas */}
                   <Route path="/dashboard" element={<AuthGuard><Layout><Dashboard /></Layout></AuthGuard>} />
                   <Route path="/metas" element={<AuthGuard><Layout><Metas /></Layout></AuthGuard>} />
-                  <Route path="/mentorado" element={<AuthGuard><Layout><Mentorado /></Layout></AuthGuard>} />
-                  <Route path="/dependentes" element={<AuthGuard><Layout><Dependentes /></Layout></AuthGuard>} />
-                  <Route path="/empresas" element={<AuthGuard><Layout><Empresas /></Layout></AuthGuard>} />
+                  <Route path="/mentorado" element={<AuthGuard><Layout><Mentorado /></Layout></AuthGuard>}/>
+                  <Route path="/empresas" element={<AuthGuard><Layout><Empresas /></Layout></AuthGuard>}/>
                   <Route path="/orcamentos" element={<AuthGuard><Layout><OrcamentosPage /></Layout></AuthGuard>} />
                   <Route path="/gestao/cards-estrategicos" element={<AuthGuard><Layout><CardsEstrategicos /></Layout></AuthGuard>} />
-                  <Route path="/gestao/analise-orcamentaria" element={<AuthGuard><Layout><AnaliseOrcamentaria /></Layout></AuthGuard>} />
+                  <Route path="/gestao/analise-orcamentaria" element={<AuthGuard><Layout><AnaliseOrcamentaria/></Layout></AuthGuard>} />
 
                   {/* Rotas de conteúdo */}
                   <Route path="/conteudos/aulas-mensais" element={<AuthGuard><Layout><AulasMensais /></Layout></AuthGuard>} />
                   <Route path="/conteudos/cursos" element={<AuthGuard><Layout><Cursos /></Layout></AuthGuard>} />
-                  <Route path="/conteudos/grow-up" element={<AuthGuard><Layout><GrowUp /></Layout></AuthGuard>} />
+                  <Route path="/conteudos/grow-up" element={<AuthGuard><Layout><GrowUp/></Layout></AuthGuard>} />
                   <Route path="/conteudos/mach1" element={<AuthGuard><Layout><Mach1Dashboard /></Layout></AuthGuard>} />
 
                   {/* Rotas do mentor - SOMENTE MENTORES */}
-                  <Route path="/mentor" element={<AuthGuard allowedRoles={['mentor']}><Layout><MentorDashboard /></Layout></AuthGuard>} />
-                  <Route path="/mentor/plano-contas" element={<AuthGuard allowedRoles={['mentor']}><Layout><PlanoContasUnifiedPage /></Layout></AuthGuard>} />
-                  <Route path="/mentor/painel-indicadores" element={<AuthGuard allowedRoles={['mentor']}><Layout><PainelIndicadores /></Layout></AuthGuard>} />
-                  <Route path="/mentorados" element={<AuthGuard allowedRoles={['mentor']}><Layout><Mentorados /></Layout></AuthGuard>} />
-                  <Route path="/mentorados/:id" element={<AuthGuard allowedRoles={['mentor']}><Layout><MentoradoDetailPage /></Layout></AuthGuard>} />
-                  <Route path="/admin/cnpj" element={<AuthGuard allowedRoles={['mentor']}><Layout><GestaoCNPJ /></Layout></AuthGuard>} />
-                  <Route path="/admin/acessos" element={<AuthGuard allowedRoles={['mentor']}><Layout><AdminAcessos /></Layout></AuthGuard>} />
-                  <Route path="/configuracao" element={<AuthGuard allowedRoles={['mentor']}><Layout><ConfiguracaoSistema /></Layout></AuthGuard>} />
+                  <Route path="/mentor" element={<AuthGuard><Layout><MentorDashboard/></Layout></AuthGuard>} />
+                  <Route path="/mentor/plano-contas" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><PlanoContasUnifiedPage /></Layout></AuthGuard>} />
+                  <Route path="/mentor/painel-indicadores" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><PainelIndicadores /></Layout></AuthGuard>} />
+                  <Route path="/mentorados" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><Mentorados /></Layout></AuthGuard>} />
+                  <Route path="/mentorados/:id" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><MentoradoDetailPage /></Layout></AuthGuard>} />
+                  <Route path="/admin/cnpj" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><GestaoCNPJ /></Layout></AuthGuard>} />
+                  <Route path="/admin/acessos" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><AdminAcessos /></Layout></AuthGuard>} />
+                  <Route path="/configuracao" element={<AuthGuard allowedRoles={["ROLE_ADMINISTRATOR"]}><Layout><ConfiguracaoSistema /></Layout></AuthGuard>} />
 
                   {/* Fallback */}
                   <Route path="*" element={<Navigate to="/" replace />} />
@@ -92,7 +89,6 @@ function App() {
               </div>
             </ThemeProvider>
           </QueryProvider>
-        </AuthProvider>
       </HelmetProvider>
     </Router>
   );

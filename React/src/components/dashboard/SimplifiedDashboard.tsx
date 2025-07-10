@@ -1,21 +1,60 @@
 
-import React from "react";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Users, Building2, Target } from "lucide-react";
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { useState } from "react";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import axios from "axios";
+import { error } from "console";
+
+const API_KEY_USER = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_REGISTER;
 
 export const SimplifiedDashboard = () => {
-  const { user } = useAuth();
-  
-  console.log("SimplifiedDashboard - Rendering with user:", user);
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState<string|unknown>("");
+  
+
+  useEffect(() => {
+    const jwtService = new JwtService();
+    const emailFromToken = jwtService.getClaim("sub");
+    setEmail(emailFromToken);
+  }, []);
+
+  useEffect(()=>{
+      const jwtService = new JwtService();
+
+      const fetchUserName = async ()=>{
+
+      if (!email) return; 
+
+      try{
+        const response = await axios.get(`${API_KEY_USER}/name`,{
+          params:{
+            email:email
+          },
+          headers:{
+            Authorization: `Bearer ${jwtService.getToken()}`
+          }
+        });
+        setName(response.data);
+      }catch(error){
+        console.error("Erro ao buscar nome do usuario:", error);
+      }
+    };
+
+    fetchUserName();
+  },[email]);
+  
+    
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Bem-vindo de volta, {user?.nome || user?.email?.split('@')[0] || 'Usuário'}
+            Bem-vindo de volta, {(name as string) ||( (email as string)?.split('@')[0] || 'Usuário')}
           </p>
         </div>
       </div>

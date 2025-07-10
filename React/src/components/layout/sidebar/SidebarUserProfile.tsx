@@ -1,27 +1,54 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import axios from "axios";
+import { JwtService } from "@/components/auth/GetAuthParams";
+
+
+const API_KEY_USER = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_REGISTER;
 
 export const SidebarUserProfile = () => {
-  const { user } = useAuth();
-  
-  // Get user initials from name or email
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState<string|unknown>("");
+
+  useEffect(() => {
+    const jwtService = new JwtService();
+    const emailFromToken = jwtService.getClaim("sub");
+    setEmail(emailFromToken);
+  }, []);
+
+  useEffect(()=>{
+      const jwtService = new JwtService();
+
+      const fetchUserName = async ()=>{
+
+      if (!email) return; 
+
+      try{
+        const response = await axios.get(`${API_KEY_USER}/name`,{
+          params:{
+            email:email
+          },
+          headers:{
+            Authorization: `Bearer ${jwtService.getToken()}`
+          }
+        });
+        setName(response.data);
+      }catch(error){
+        console.error("Erro ao buscar nome do usuario:", error);
+      }
+    };
+
+    fetchUserName();
+  },[email]);
+
+  // Gerar iniciais
   const getInitials = () => {
-    if (!user) return "GU";
-    
-    if (user.nome) {
-      const parts = user.nome.split(' ');
-      if (parts.length === 1) return parts[0].charAt(0);
-      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`;
-    }
-    
-    // Fallback to email
-    if (user.email) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    
-    return "GU";
+    const base = (name as string) || (email as string) || "";
+    const parts = base.split(" ");
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -37,7 +64,7 @@ export const SidebarUserProfile = () => {
           <div>
             <h2 className="text-lg font-semibold">Grow Up Intelligence</h2>
             <p className="text-sm text-sidebar-foreground/70">
-              {user?.nome || user?.email || 'Bem-vindo'}
+              {(name as string) || (email as string) || "Bem-vindo"}
             </p>
           </div>
         </div>
