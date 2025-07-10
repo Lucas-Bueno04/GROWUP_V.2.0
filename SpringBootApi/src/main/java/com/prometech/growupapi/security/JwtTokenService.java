@@ -1,9 +1,11 @@
 package com.prometech.growupapi.security;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
@@ -50,8 +52,25 @@ public class JwtTokenService {
 			throw  new JWTVerificationException("Token inválido ou expirado");
 		}
 	}
-	
-	private Instant creationDate(){
+
+	public boolean isTokenValido(String token) {
+		try {
+			Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY);
+			JWTVerifier verifier = JWT.require(algorithm)
+					                       .withIssuer(ISSUER)
+					                       .build();
+			
+			DecodedJWT decodedJWT = verifier.verify(token);
+			
+			// Verifica data de expiração explicitamente (opcional, mas seguro)
+			return decodedJWT.getExpiresAt().toInstant().isAfter(Instant.now());
+		} catch (JWTVerificationException e) {
+			return false;
+		}
+	}
+
+
+private Instant creationDate(){
 		return ZonedDateTime.now().toInstant();
 	}
 	

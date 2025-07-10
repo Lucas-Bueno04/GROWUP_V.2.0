@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -47,10 +48,20 @@ public class UserService {
 		
 		User newUser = new User();
 		newUser.setName(createUserDto.name());
+		newUser.setEmail(createUserDto.email());
 		newUser.setPassword(securityConfig.passwordEncoder().encode(createUserDto.password()));
 		newUser.setRoles(List.of(Role.builder().name(createUserDto.role()).build()));
 		
 		userRepository.save(newUser);
 		
 	}
+
+	public String getNameByEmail(String email) {
+		User user = userRepository.findByEmail(email)
+				            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com email: " + email));
+		
+		return user.getName();
+	}
+	
+	
 }

@@ -2,6 +2,7 @@ package com.prometech.growupapi.controllers;
 
 import com.prometech.growupapi.dto.LoginUserDto;
 import com.prometech.growupapi.dto.RecoveryJwtTokenDto;
+import com.prometech.growupapi.security.JwtTokenService;
 import com.prometech.growupapi.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,9 @@ public class AuthController {
 	@Autowired
 	private UserService userService;
 	
+	@Autowired
+	private JwtTokenService jwtTokenService;
+	
 	@PostMapping
 	public ResponseEntity<RecoveryJwtTokenDto> authenticateUser(@RequestBody LoginUserDto loginUserDto){
 		RecoveryJwtTokenDto token = userService.authenticateUser(loginUserDto);
@@ -25,5 +29,12 @@ public class AuthController {
 		
 	}
 	
+	@PostMapping("/validate")
+	public ResponseEntity<Boolean> validateToken(@RequestBody RecoveryJwtTokenDto tokenDTO){
+		boolean isValid = jwtTokenService.isTokenValido(tokenDTO.token());
+		
+		return ResponseEntity.ok(isValid);
+	}
+
 	
 }

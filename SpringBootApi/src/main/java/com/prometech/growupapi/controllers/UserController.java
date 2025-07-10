@@ -5,13 +5,10 @@ import com.prometech.growupapi.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 public class UserController {
 
 	@Autowired
@@ -21,6 +18,21 @@ public class UserController {
 	public ResponseEntity<Void> createUser(@RequestBody CreateUserDto createUserDto){
 		userService.createUser(createUserDto);
 		return  new ResponseEntity<>(HttpStatus.CREATED);
+	}
+	
+	@GetMapping("/name")
+	public ResponseEntity<String> getUserNameByEmail(@RequestParam String email){
+		try {
+			String name = userService.getNameByEmail(email);
+			return ResponseEntity.ok(name);
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+		}
+	}
+	
+	@GetMapping("/test")
+	public ResponseEntity<String> test(){
+		return ResponseEntity.status(HttpStatus.OK).body("TESTE DE AUTENTICAÇÃO CONCLUIDO COM SUCESSO");
 	}
 	
 	
