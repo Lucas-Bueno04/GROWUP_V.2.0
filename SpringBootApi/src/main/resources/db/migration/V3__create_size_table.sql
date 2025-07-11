@@ -1,0 +1,8 @@
+CREATE TABLE size (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    min_value DECIMAL(19,2) NOT NULL,
+    max_value DECIMAL(19,2) NOT NULL,
+    img_url VARCHAR(255),
+    PRIMARY KEY (id)
+);

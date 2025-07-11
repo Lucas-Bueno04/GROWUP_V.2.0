@@ -16,6 +16,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ allowedRoles, children }) 
 
   useEffect(() => {
     if (!isAuthenticated) {
+      localStorage.setItem("token", null);
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);

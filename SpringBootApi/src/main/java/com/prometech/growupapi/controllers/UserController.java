@@ -29,11 +29,7 @@ public class UserController {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
 		}
 	}
-	
-	@GetMapping("/test")
-	public ResponseEntity<String> test(){
-		return ResponseEntity.status(HttpStatus.OK).body("TESTE DE AUTENTICAÇÃO CONCLUIDO COM SUCESSO");
-	}
+
 	
 	
 }

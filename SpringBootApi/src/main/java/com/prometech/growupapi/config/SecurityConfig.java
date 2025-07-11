@@ -34,7 +34,9 @@ public class SecurityConfig {
 	};
 	
 	public static final String [] ENDPOINTS_WITH_AUTHENTICATION_REQUIRED = {
-			"/api/v1/users/**"
+			"/api/v1/users/**",
+			"api/v1/size",
+			"api/v1/size/by-invoicing"
 	
 	
 	};
@@ -44,6 +46,9 @@ public class SecurityConfig {
 	};
 	
 	public  static  final String [] ENDPOINTS_ADMIN = {
+			"/api/v1/size/create/**",
+			"/api/v1/size/update/**",
+			"/api/v1/size/delete/**"
 	
 	};
 	

@@ -9,22 +9,6 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { PlanoContasDirectDB } from '@/components/plano-contas/PlanoContasDirectDB';
 
 export default function PlanoContasUnifiedPage() {
-  const { user } = useAuth();
-
-  // Check if user is mentor
-  if (user?.role !== 'mentor') {
-    return (
-      <div className="container mx-auto py-10">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Acesso Negado</AlertTitle>
-          <AlertDescription>
-            Apenas mentores podem acessar a gestão do plano de contas.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
 
   return (
     <ErrorBoundary>

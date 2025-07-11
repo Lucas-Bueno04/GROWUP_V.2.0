@@ -2,10 +2,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 import { LucideIcon } from "lucide-react";
 
-type Role = 'aluno' | 'dependente' | 'mentor';
 
 type SidebarItemProps = {
   to: string;
@@ -15,7 +13,6 @@ type SidebarItemProps = {
   hasSubmenu?: boolean;
   expanded?: boolean;
   onClick?: () => void;
-  requiredRoles?: Role[];
   badge?: React.ReactNode;
 };
 
@@ -27,16 +24,10 @@ export const SidebarItem = ({
   hasSubmenu,
   expanded,
   onClick,
-  requiredRoles,
   badge
 }: SidebarItemProps) => {
-  const { user } = useAuth();
-  const location = useLocation();
 
-  // Add debug logs to understand navigation
-  console.log('SidebarItem - rendering:', label);
-  console.log('SidebarItem - to:', to);
-  console.log('SidebarItem - current location:', location.pathname);
+  const location = useLocation();
 
   // Melhorar a lógica para evitar que múltiplos items sejam selecionados
   const isActive = active !== undefined ? active : (() => {
@@ -63,11 +54,7 @@ export const SidebarItem = ({
     return false;
   })();
 
-  // Check if user has permission to see this item
-  const userRole = user?.role as Role | undefined;
-  if (requiredRoles && userRole && !requiredRoles.includes(userRole)) {
-    return null;
-  }
+  
 
   return (
     <Link 

@@ -22,9 +22,6 @@ export function ConfiguracaoSistema() {
     setConfigCalculos,
     setParametrosIA,
     setFormulaTeste,
-    adicionarFaixa,
-    removerFaixa,
-    atualizarFaixa,
     testarFormulaClick,
     salvarConfiguracoes
   } = useConfiguracaoSistema();
@@ -36,19 +33,6 @@ export function ConfiguracaoSistema() {
           title="Configuração do Sistema"
           description="Configure parâmetros gerais, faixas de faturamento e algoritmos do sistema"
           colorScheme="yellow"
-          actions={
-            <button
-              onClick={salvarConfiguracoes}
-              disabled={!hasUnsavedChanges}
-              className={`px-4 py-2 rounded font-medium transition-colors ${
-                hasUnsavedChanges
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              Salvar Configurações
-            </button>
-          }
         />
 
         <Tabs defaultValue="faturamento" className="space-y-6">
@@ -62,11 +46,7 @@ export function ConfiguracaoSistema() {
 
           <TabsContent value="faturamento" className="space-y-4">
             <FaixasFaturamentoTab
-              faixasFaturamento={faixasFaturamento}
               isLoadingFaixas={isLoadingFaixas}
-              onAdicionarFaixa={adicionarFaixa}
-              onRemoverFaixa={removerFaixa}
-              onAtualizarFaixa={atualizarFaixa}
             />
           </TabsContent>
 

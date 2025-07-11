@@ -103,11 +103,6 @@ export const SidebarNavigation = () => {
           label="Meu Perfil"
         />
         <SidebarItem 
-          to="/dependentes" 
-          icon={UserPlus}
-          label="Dependentes"
-        />
-        <SidebarItem 
           to="/empresas" 
           icon={Building2}
           label="Empresas"
