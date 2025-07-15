@@ -1,5 +1,6 @@
 package com.prometech.growupapi.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,4 +44,5 @@ public class User {
 					  inverseJoinColumns = @JoinColumn(name = "role_id")
 	)
 	private List<Role> roles;
+	
 }

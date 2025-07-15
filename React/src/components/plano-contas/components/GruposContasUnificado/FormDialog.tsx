@@ -8,6 +8,21 @@ import { TipoCalculo, TipoSinal } from '@/types/plano-contas.types';
 
 type EntityType = 'grupo' | 'conta';
 
+
+interface Account {
+  id: number;
+  cod: string;
+  name: string;
+}
+
+interface Group {
+  id: number;
+  cod: string;
+  name: string;
+  accounts: Account[];
+  // ordem?: number; // Descomente se estiver usando 'ordem' para ordenação
+}
+
 interface FormData {
   type: EntityType;
   grupoId?: string;
@@ -27,7 +42,7 @@ interface FormDialogProps {
   editingEntity: { type: EntityType; data: any } | null;
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
-  grupos: OrcamentoGrupo[];
+  grupos: Group[];
   loading: boolean;
   onSave: () => void;
 }

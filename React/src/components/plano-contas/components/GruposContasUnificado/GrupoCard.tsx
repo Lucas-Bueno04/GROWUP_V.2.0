@@ -1,31 +1,62 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, Calculator } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { OrcamentoGrupo, OrcamentoConta } from '@/types/orcamento.types';
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 import { ContaItem } from './ContaItem';
 
+interface Account {
+  id: number;
+  cod: string;
+  name: string;
+}
+
+interface Group {
+  id: number;
+  cod: string;
+  name: string;
+  accounts: Account[];
+}
+
 interface GrupoCardProps {
-  grupo: OrcamentoGrupo;
-  contas: OrcamentoConta[];
-  onNewConta: (grupoId: string) => void;
-  onEditGrupo: (grupo: OrcamentoGrupo) => void;
-  onDeleteGrupo: (id: string) => void;
-  onEditConta: (conta: OrcamentoConta) => void;
-  onDeleteConta: (id: string) => void;
+  group: Group;
+  onNewConta: (grupoId: number) => void;
+  onEditGrupo: (group: Group) => void;
+  onDeleteGrupo: (id: number) => void;
+  onEditConta: (account: Account) => void;
+  onDeleteConta: (id: number) => void;
 }
 
 export function GrupoCard({
-  grupo,
-  contas,
+  group,
   onNewConta,
   onEditGrupo,
   onDeleteGrupo,
   onEditConta,
   onDeleteConta
 }: GrupoCardProps) {
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editCod, setEditCod] = useState(group.cod);
+  const [editName, setEditName] = useState(group.name);
+
+  useEffect(() => {
+    if (isEditing) {
+      setEditCod(group.cod);
+      setEditName(group.name);
+    }
+  }, [isEditing, group.cod, group.name]);
+
   const getGrupoColorClass = (codigo: string) => {
     const num = parseInt(codigo);
     if (num === 1) return 'border-l-4 border-l-blue-500 bg-blue-50/50';
@@ -42,7 +73,7 @@ export function GrupoCard({
     return 'border-l-4 border-l-gray-300 bg-gray-50/50';
   };
 
-  const colorClass = getGrupoColorClass(grupo.codigo);
+  const colorClass = getGrupoColorClass(group.cod);
 
   return (
     <div className={`border rounded-lg ${colorClass}`}>
@@ -51,74 +82,89 @@ export function GrupoCard({
           <div className="flex items-center gap-3">
             <div className="text-left">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-mono text-sm font-bold">
-                  {grupo.codigo}
-                </span>
-                <span className="font-semibold text-sm">
-                  {grupo.nome}
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  {grupo.tipo_calculo === 'calculado' && <Calculator className="h-3 w-3 mr-1" />}
-                  {grupo.tipo_calculo}
-                </Badge>
-                
-                {grupo.formula && (
-                  <Badge variant="secondary" className="text-xs font-mono">
-                    {grupo.formula}
-                  </Badge>
-                )}
-                
-                {grupo.editavel_aluno ? (
-                  <Badge variant="default" className="text-xs">Editável</Badge>
-                ) : (
-                  <Badge variant="secondary" className="text-xs">Fixo</Badge>
-                )}
+                <span className="font-mono text-sm font-bold">{group.cod}</span>
+                <span className="font-semibold text-sm">{group.name}</span>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {contas.length} conta{contas.length !== 1 ? 's' : ''}
+              {group.accounts.length} conta{group.accounts.length !== 1 ? 's' : ''}
             </Badge>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onNewConta(grupo.id)}
-            >
+
+            <Button variant="outline" size="sm" onClick={() => onNewConta(group.id)}>
               <Plus className="h-4 w-4" />
             </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEditGrupo(grupo)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            
+
+            {/* Botão de editar grupo */}
+            <AlertDialog open={isEditing} onOpenChange={setIsEditing}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="text-black dark:text-white">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Editar Grupo</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Altere o código ou nome do grupo e clique em "Salvar" para confirmar.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="cod" className="text-sm font-semibold">Código</label>
+                    <input
+                      id="cod"
+                      type="text"
+                      value={editCod}
+                      onChange={(e) => setEditCod(e.target.value)}
+                      className="border rounded px-3 py-2 text-sm text-black "
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="name" className="text-sm font-semibold">Nome</label>
+                    <input
+                      id="name"
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="border rounded px-3 py-2 text-sm text-black "
+                    />
+                  </div>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setIsEditing(false)}>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      onEditGrupo({ ...group, cod: editCod, name: editName });
+                      setIsEditing(false);
+                    }}
+                  >
+                    Salvar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Botão de deletar grupo */}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="text-black dark:text-white">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Tem certeza que deseja excluir o grupo "{grupo.nome}"?
-                    Esta ação não pode ser desfeita.
+                    Tem certeza que deseja excluir o grupo "{group.name}"? Esta ação não pode ser desfeita.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={() => onDeleteGrupo(grupo.id)}
+                    onClick={() => onDeleteGrupo(group.id)}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
                     Excluir
@@ -128,19 +174,17 @@ export function GrupoCard({
             </AlertDialog>
           </div>
         </div>
-        
-        {contas.length > 0 && (
+
+        {group.accounts.length > 0 && (
           <div className="space-y-2">
-            {contas
-              .sort((a, b) => a.ordem - b.ordem)
-              .map((conta) => (
-                <ContaItem
-                  key={conta.id}
-                  conta={conta}
-                  onEdit={onEditConta}
-                  onDelete={onDeleteConta}
-                />
-              ))}
+            {group.accounts.map((account) => (
+              <ContaItem
+                key={account.id}
+                account={account}
+                onEdit={onEditConta}
+                onDelete={onDeleteConta}
+              />
+            ))}
           </div>
         )}
       </div>

@@ -1,18 +1,35 @@
 
 import { EmpresaAtivaCard } from "./EmpresaAtivaCard";
 
-interface EmpresasAtivasSectionProps {
-  empresas: any[];
-  isLoading: boolean;
+
+interface Size{
+  name,
+  minValue, 
+  maxValue
 }
 
-export function EmpresasAtivasSection({ empresas, isLoading }: EmpresasAtivasSectionProps) {
+interface Enterprise{
+  id:number,
+  cnpj:string,
+  corporateName:string,
+	tradeName:string,
+	phone:string,
+	email:string,
+	size:Size,
+	sector:string,
+	region:string,
+	invoicing:number,
+  taxRegime:string
+}
+
+interface EmpresasAtivasSectionProps {
+  empresas: Enterprise[];
+}
+
+export function EmpresasAtivasSection({ empresas }: EmpresasAtivasSectionProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Empresas Autorizadas</h3>
-      {isLoading ? (
-        <p className="text-muted-foreground">Carregando...</p>
-      ) : empresas.length === 0 ? (
+      {empresas.length === 0 ? (
         <p className="text-muted-foreground">Nenhuma empresa autorizada encontrada.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

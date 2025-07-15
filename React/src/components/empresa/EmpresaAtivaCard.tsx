@@ -9,18 +9,40 @@ import { RegistrarHistoricoDialog } from "./RegistrarHistoricoDialog";
 import { CompanyMedal } from "./CompanyMedal";
 import { useCompanyBadge } from "@/hooks/useCompanyBadge";
 
+
+interface Size{
+  name,
+  minValue, 
+  maxValue
+}
+
+interface Enterprise{
+  id:number,
+  cnpj:string,
+  corporateName:string,
+	tradeName:string,
+	phone:string,
+	email:string,
+	size:Size,
+	sector:string,
+	region:string,
+	invoicing:number,
+  taxRegime:string
+}
+
 interface EmpresaAtivaCardProps {
-  empresa: any;
+  empresa: Enterprise;
 }
 
 export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
-  const { data: badgeData } = useCompanyBadge(empresa.id);
+  
 
   return (
     <Card className="border border-slate-300 h-full hover:shadow-md transition-shadow">
       <CardContent className="p-4 flex flex-col h-full">
         {/* Header with Badge and Company Name */}
         <div className="flex items-start gap-3 mb-4">
+          {/*
           <div className="flex-shrink-0">
             {badgeData?.classification ? (
               <CompanyMedal 
@@ -34,57 +56,32 @@ export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
                 <Building className="w-6 h-6 text-gray-400" />
               </div>
             )}
-          </div>
+          </div>*/}
           
           <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-lg leading-tight mb-1">{empresa.nome_fantasia}</h4>
+            <h4 className="font-bold text-lg leading-tight mb-1">{empresa.tradeName ||empresa.corporateName}</h4>
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               Ativa
             </Badge>
           </div>
+          
+  
 
-          {/* Progress Section - Right aligned */}
-          {badgeData?.classification && badgeData.nextLevel && (
-            <div className="flex-shrink-0 text-right">
-              <div className="text-xs text-muted-foreground mb-1">
-                Próximo nível:
-              </div>
-              <div className="text-xs font-semibold text-blue-600">
-                {badgeData.nextLevel}
-              </div>
-              {badgeData.nextThreshold && (
-                <div className="text-xs text-muted-foreground">
-                  {((badgeData.currentRevenue / badgeData.nextThreshold) * 100).toFixed(1)}%
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Company Details */}
+
         <div className="flex-1 space-y-1 text-sm text-muted-foreground mb-4">
-          <p className="truncate">Razão Social: {empresa.nome}</p>
-          <p>CNPJ: {empresa.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5")}</p>
-          <p>Setor: {empresa.setor}</p>
-          <p>Porte: {empresa.porte}</p>
+          <p className="truncate">Razão Social: {empresa.corporateName}</p>
+          <p>CNPJ: {empresa.cnpj}</p>
+          <p>Setor: {empresa.sector}</p>
+          <p>Porte: {empresa.size?.name??""}</p>
         </div>
 
         {/* Actions Footer */}
         <div className="pt-3 border-t border-slate-200 flex flex-wrap gap-2">
           <EditarEmpresaDialog 
             empresaId={empresa.id}
-            empresaData={{
-              nome: empresa.nome || '',
-              nome_fantasia: empresa.nome_fantasia || '',
-              cnpj: empresa.cnpj || '',
-              setor: empresa.setor || '',
-              porte: empresa.porte || '',
-              telefone: empresa.telefone || '',
-              site: empresa.site || '',
-              regime_tributario: empresa.regime_tributario,
-              regiao: empresa.regiao,
-              faturamento_anual_anterior: empresa.faturamento_anual_anterior
-            }}
+            empresaData={empresa}
             trigger={
               <Button variant="outline" size="sm" className="flex-1">
                 <Pencil size={14} className="mr-1" />
@@ -93,19 +90,11 @@ export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
             }
           />
           <DetalhesEmpresaCompleto
-            empresaId={empresa.id}
+            empresa={empresa}
             trigger={
               <Button variant="outline" size="sm" className="flex-1">
                 <FileText size={14} className="mr-1" />
                 Detalhes
-              </Button>
-            }
-          />
-          <RegistrarHistoricoDialog
-            empresaId={empresa.id}
-            trigger={
-              <Button variant="outline" size="sm" className="w-full">
-                Histórico
               </Button>
             }
           />

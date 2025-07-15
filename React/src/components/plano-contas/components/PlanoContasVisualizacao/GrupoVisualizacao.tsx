@@ -7,20 +7,33 @@ import { OrcamentoGrupo, OrcamentoConta } from '@/types/orcamento.types';
 import { ContaVisualizacaoItem } from './ContaVisualizacaoItem';
 import { getDescricaoGrupo, getGrupoColorClass, getTipoCalculoBadgeVariant } from './utils';
 
+
+interface Account{
+  id:number;
+  cod:string,
+  name:string
+}
+
+interface Group{
+  id:number,
+  cod:string,
+  name:string,
+  accounts:Account[]
+}
 interface GrupoVisualizacaoProps {
-  grupo: OrcamentoGrupo;
-  contas: OrcamentoConta[];
+  grupo: Group;
   isExpanded: boolean;
   onToggle: () => void;
 }
 
+
+
 export function GrupoVisualizacao({ 
   grupo, 
-  contas, 
   isExpanded, 
   onToggle 
 }: GrupoVisualizacaoProps) {
-  const colorClass = getGrupoColorClass(grupo.codigo);
+  const colorClass = getGrupoColorClass(grupo.cod);
   
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
@@ -37,36 +50,22 @@ export function GrupoVisualizacao({
               <div className="text-left">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-mono text-sm font-semibold">
-                    {grupo.codigo}
+                    {grupo.cod}
                   </span>
                   <span className="font-medium text-sm">
-                    {grupo.nome}
+                    {grupo.name}
                   </span>
                 </div>
                 
-                <p className="text-xs text-muted-foreground">
-                  {getDescricaoGrupo(grupo.codigo)}
-                </p>
+                
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Badge 
-                variant={getTipoCalculoBadgeVariant(grupo.tipo_calculo)}
-                className="text-xs"
-              >
-                {grupo.tipo_calculo === 'calculado' && <Calculator className="h-3 w-3 mr-1" />}
-                {grupo.tipo_calculo}
-              </Badge>
               
-              {grupo.formula && (
-                <Badge variant="outline" className="text-xs font-mono">
-                  {grupo.formula}
-                </Badge>
-              )}
               
               <Badge variant="secondary" className="text-xs">
-                {contas.length} conta{contas.length !== 1 ? 's' : ''}
+                {grupo.accounts.length} conta{grupo.accounts.length !== 1 ? 's' : ''}
               </Badge>
             </div>
           </div>
@@ -75,7 +74,7 @@ export function GrupoVisualizacao({
         <CollapsibleContent>
           <div className="border-t bg-muted/20">
             <div className="p-4">
-              {contas.length === 0 ? (
+              {grupo.accounts.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
                   <p className="text-sm">Nenhuma conta cadastrada neste grupo</p>
                   <p className="text-xs mt-1">
@@ -88,10 +87,9 @@ export function GrupoVisualizacao({
                     Contas Detalhadas:
                   </h4>
                   
-                  {contas
-                    .sort((a, b) => a.ordem - b.ordem)
-                    .map((conta) => (
-                      <ContaVisualizacaoItem key={conta.id} conta={conta} />
+                  {grupo.accounts
+                    .map((account) => (
+                      <ContaVisualizacaoItem key={account.id} {...account} />
                     ))}
                 </div>
               )}

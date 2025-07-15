@@ -36,9 +36,11 @@ public class SecurityConfig {
 	public static final String [] ENDPOINTS_WITH_AUTHENTICATION_REQUIRED = {
 			"/api/v1/users/**",
 			"api/v1/size",
-			"api/v1/size/by-invoicing"
-	
-	
+			"api/v1/size/by-invoicing",
+			"/api/v1/group",
+			"/api/v1/account",
+			"api/v1/enterprise",
+			"/api/v1/enterprise/**"
 	};
 	
 	public static  final String [] ENDPOINTS_CUSTOMER ={
@@ -48,8 +50,15 @@ public class SecurityConfig {
 	public  static  final String [] ENDPOINTS_ADMIN = {
 			"/api/v1/size/create/**",
 			"/api/v1/size/update/**",
-			"/api/v1/size/delete/**"
-	
+			"/api/v1/size/delete/**",
+			"/api/v1/group/create/**",
+			"/api/v1/group/update/**",
+			"/api/v1/group/delete/**",
+			"/api/v1/account/update/**",
+			"/api/v1/account/delete/**",
+			"/api/v1/account/create/**",
+			"/api/v1/enterprise/create/**",
+		
 	};
 	
 	@Bean

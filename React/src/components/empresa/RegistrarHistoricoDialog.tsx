@@ -18,7 +18,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface RegistrarHistoricoDialogProps {
-  empresaId: string;
+  empresaId: number;
   onSuccess?: () => void;
   trigger?: React.ReactNode;
 }

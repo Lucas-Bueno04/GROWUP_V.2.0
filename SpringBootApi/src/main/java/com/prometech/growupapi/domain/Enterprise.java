@@ -18,6 +18,8 @@ public class Enterprise {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
+	private String Cnpj;
+	
 	@Column(nullable = false)
 	private String corporateName;
 	
@@ -25,10 +27,9 @@ public class Enterprise {
 	
 	private String phone;
 	
-	@Column(unique = true)
 	private String email;
 	
-	@ManyToOne(optional = false)
+	@ManyToOne()
 	@JoinColumn(referencedColumnName = "id")
 	private Size size;
 	
@@ -38,14 +39,11 @@ public class Enterprise {
 	
 	private String region;
 	
-	@Column(nullable = false)
 	private BigDecimal invoicing;
 	
 	@ManyToOne(optional = false)
 	@JoinColumn(referencedColumnName = "id")
 	@OnDelete(action = OnDeleteAction.CASCADE)
-	
 	private User user;
-	
 	
 }

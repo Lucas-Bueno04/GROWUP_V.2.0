@@ -8,6 +8,8 @@ import { PlanoContasIndicadores } from './PlanoContasIndicadores';
 import { GruposContasUnificado } from './components/GruposContasUnificado';
 import { useOrcamentoGrupos, useOrcamentoContas, useOrcamentoIndicadores } from '@/hooks/plano-contas';
 
+
+
 export function PlanoContasDirectDB() {
   const { data: grupos = [], isLoading: loadingGrupos, refetch: refetchGrupos } = useOrcamentoGrupos();
   const { data: contas = [], isLoading: loadingContas, refetch: refetchContas } = useOrcamentoContas();
@@ -56,13 +58,11 @@ export function PlanoContasDirectDB() {
         </TabsList>
 
         <TabsContent value="visualizacao" className="mt-6">
-          <PlanoContasVisualizacao grupos={grupos} contas={contas} />
+          <PlanoContasVisualizacao />
         </TabsContent>
 
         <TabsContent value="gestao" className="mt-6">
           <GruposContasUnificado 
-            grupos={grupos} 
-            onDataChange={handleDataChange}
           />
         </TabsContent>
 

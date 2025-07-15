@@ -2,8 +2,29 @@
 import { ExternalLink } from "lucide-react";
 import { Empresa } from "@/types/empresa.types";
 
+
+interface Size{
+  name,
+  minValue, 
+  maxValue
+}
+
+interface Enterprise{
+  id:number,
+  cnpj:string,
+  corporateName:string,
+	tradeName:string,
+	phone:string,
+	email:string,
+	size:Size,
+	sector:string,
+	region:string,
+	invoicing:number,
+  taxRegime:string
+}
+
 interface InfoTabProps {
-  empresa: Empresa;
+  empresa: Enterprise;
 }
 
 export function InfoTab({ empresa }: InfoTabProps) {
@@ -15,41 +36,19 @@ export function InfoTab({ empresa }: InfoTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">Nome Fantasia</h3>
-          <p className="text-base">{empresa.nome_fantasia}</p>
+          <p className="text-base">{empresa.tradeName}</p>
         </div>
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">Setor</h3>
-          <p className="text-base">{empresa.setor}</p>
+          <p className="text-base">{empresa.sector}</p>
         </div>
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">Porte</h3>
-          <p className="text-base">{empresa.porte}</p>
+          <p className="text-base">{empresa.size.name}</p>
         </div>
         <div>
           <h3 className="text-sm font-medium text-muted-foreground">Telefone</h3>
-          <p className="text-base">{empresa.telefone}</p>
-        </div>
-        {empresa.site && (
-          <div className="col-span-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Website</h3>
-            <a 
-              href={empresa.site.startsWith('http') ? empresa.site : `https://${empresa.site}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-blue-500 hover:underline"
-            >
-              {empresa.site}
-              <ExternalLink size={14} />
-            </a>
-          </div>
-        )}
-        <div className="col-span-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Data de Solicitação</h3>
-          <p className="text-base">{empresa.data_solicitacao}</p>
-        </div>
-        <div className="col-span-2">
-          <h3 className="text-sm font-medium text-muted-foreground">Solicitado por</h3>
-          <p className="text-base">{empresa.solicitado_por}</p>
+          <p className="text-base">{empresa.phone}</p>
         </div>
       </div>
     </div>
