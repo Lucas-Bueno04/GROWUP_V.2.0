@@ -1,6 +1,6 @@
-
 CREATE TABLE budget (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100),
     year INT NOT NULL,
     enterprise_id BIGINT NOT NULL,
     FOREIGN KEY (enterprise_id) REFERENCES enterprise(id)
@@ -19,6 +19,9 @@ CREATE TABLE account_value (
     value_type VARCHAR(20) NOT NULL, -- enum
     account_id BIGINT NOT NULL,
     month_budget_id BIGINT NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES account(id),
-    FOREIGN KEY (month_budget_id) REFERENCES month_budget(id) ON DELETE CASCADE
+    FOREIGN KEY (account_id) REFERENCES account(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (month_budget_id) REFERENCES month_budget(id)
+        ON DELETE CASCADE
 );

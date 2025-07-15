@@ -23,12 +23,17 @@ public class BudgetService {
 	@Autowired
 	private AccountRepository accountRepository;
 	
-	public Budget getBudgetById(Long id){
-		return budgetRepository.findById(id).orElseThrow(()->new RuntimeException("Erro ao buscar orçamento"));
+	@Autowired
+	private BudgetMapperService budgetMapperService;
+	
+	public BudgetRequestDto getBudgetById(Long id){
+		Budget budget = budgetRepository.findById(id).orElseThrow(()->new RuntimeException("Erro ao buscar orçamento"));
 		
+		return  BudgetMapperService.toDto(budget);
 	}
-	public List<Budget> getAllBudgetsByUserEmail(String email){
-		return budgetRepository.findByEnterpriseUserEmail(email);
+	public List<BudgetRequestDto> getAllBudgetsByUserEmail(String email){
+		List<Budget> budgets =  budgetRepository.findByEnterpriseUserEmail(email);
+		return budgets.stream().map(BudgetMapperService::toDto).toList();
 	}
 	
 	public void createBudget(BudgetRequestDto budgetRequestDto){
@@ -36,6 +41,7 @@ public class BudgetService {
 		
 		Budget budget = new Budget();
 		
+		budget.setName(budgetRequestDto.name());
 		budget.setYear(budgetRequestDto.year());
 		budget.setEnterprise(enterprise);
 		
@@ -64,6 +70,7 @@ public class BudgetService {
 	public void updateBudget(Long id, BudgetRequestDto budgetRequestDto){
 		Budget budget = budgetRepository.findById(id).orElseThrow(()->new RuntimeException("Erro ao buscar orçamento por id"));
 		
+		budget.setName(budgetRequestDto.name());
 		budget.setYear(budgetRequestDto.year());
 		Enterprise enterprise = enterpriseRepository.findById(budgetRequestDto.enterpriseId())
 				                        .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));

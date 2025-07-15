@@ -19,6 +19,8 @@ public class Budget {
 	
 	private Integer year;
 	
+	private String name;
+
 	@ManyToOne
 	@JsonBackReference
 	private Enterprise enterprise;

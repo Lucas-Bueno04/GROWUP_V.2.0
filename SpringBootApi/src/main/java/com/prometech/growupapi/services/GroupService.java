@@ -5,6 +5,7 @@ import com.prometech.growupapi.repositories.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -24,7 +25,32 @@ public class GroupService {
 	}
 	
 	public List<Group> getAllGroupsWithAccounts(){
-		return  groupRepository.findAllWithAccounts();
+		List<Group> groups = groupRepository.findAllWithAccounts();
+		
+		for (Group group : groups) {
+			group.getAccounts().sort(Comparator.comparing(account -> {
+				String cod = account.getCod();
+				if (cod == null || cod.isBlank()) return Integer.MAX_VALUE;
+				
+				String[] parts = cod.split("\\.");
+				if (parts.length < 2) return Integer.MAX_VALUE;
+				
+				// verifica se partes não estão vazias
+				if (parts[0].isEmpty() || parts[1].isEmpty()) return Integer.MAX_VALUE;
+				
+				try {
+					int major = Integer.parseInt(parts[0]);
+					int minor = Integer.parseInt(parts[1]);
+					return major * 1000 + minor;
+				} catch (NumberFormatException e) {
+					return Integer.MAX_VALUE;
+				}
+			}));
+		}
+		
+		return groups;
+		
+		
 	}
 	
 	public Group updateGroup(Long id, Group updateGroup){

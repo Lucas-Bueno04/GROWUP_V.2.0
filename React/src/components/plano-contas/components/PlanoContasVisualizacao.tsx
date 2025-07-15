@@ -96,7 +96,6 @@ export function PlanoContasVisualizacao() {
             })}
         </div>
 
-        <LegendaEstruturaDRE />
       </CardContent>
     </Card>
   );

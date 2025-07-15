@@ -25,15 +25,15 @@ public class BudgetController {
 	}
 	
 	@GetMapping("/by-email/{email}")
-	public ResponseEntity<List<Budget>> getByUserEmail(@PathVariable String email){
-		List<Budget> budgets =  budgetService.getAllBudgetsByUserEmail(email);
+	public ResponseEntity<List<BudgetRequestDto>> getByUserEmail(@PathVariable String email){
+		List<BudgetRequestDto> budgets =  budgetService.getAllBudgetsByUserEmail(email);
 		
 		return  ResponseEntity.ok(budgets);
 	}
 	
 	@GetMapping("/by-id/{id}")
-	public ResponseEntity<Budget> getBudgetById(@PathVariable Long id){
-		Budget budget = budgetService.getBudgetById(id);
+	public ResponseEntity<BudgetRequestDto> getBudgetById(@PathVariable Long id){
+		BudgetRequestDto budget = budgetService.getBudgetById(id);
 		
 		return  ResponseEntity.ok(budget);
 	}

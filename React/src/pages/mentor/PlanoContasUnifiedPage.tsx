@@ -29,7 +29,7 @@ export default function PlanoContasUnifiedPage() {
               <CheckCircle className="h-4 w-4" />
               <AlertTitle>Nova Estrutura DRE para Escritórios Contábeis</AlertTitle>
               <AlertDescription>
-                O plano de contas foi reestruturado com 11 grupos principais específicos para escritórios contábeis, 
+                O plano de contas foi reestruturado com grupos principais específicos para escritórios contábeis, 
                 seguindo uma estrutura DRE otimizada que permite melhor controle e análise financeira.
               </AlertDescription>
             </Alert>
