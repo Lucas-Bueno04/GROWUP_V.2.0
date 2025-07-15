@@ -30,7 +30,7 @@ public class Enterprise {
 	private String email;
 	
 	@ManyToOne()
-	@JoinColumn(referencedColumnName = "id")
+	@JoinColumn(name = "size_id", referencedColumnName = "id")
 	private Size size;
 	
 	private String taxRegime;
@@ -42,7 +42,7 @@ public class Enterprise {
 	private BigDecimal invoicing;
 	
 	@ManyToOne(optional = false)
-	@JoinColumn(referencedColumnName = "id")
+	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	private User user;
 	

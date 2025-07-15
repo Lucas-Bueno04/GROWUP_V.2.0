@@ -73,18 +73,16 @@ const Empresas = () => {
           title="Gerenciamento de Empresas"
           description="Gerencie empresas cadastradas no sistema"
           colorScheme="blue"
-          actions={<NovaEmpresaAdminDialog />}
+          actions={<NovaEmpresaAdminDialog onCreatedEnterprise={loadEnterprises} />}
         />
 
         <div className="space-y-6">
-          <EmpresasSearch 
-          />
-
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Empresas Cadastradas</h2>
             
             <EmpresasAtivasSection 
               empresas={enterprises}
+              onDeleteEnterprises={loadEnterprises}
             />
           </div>
         </div>

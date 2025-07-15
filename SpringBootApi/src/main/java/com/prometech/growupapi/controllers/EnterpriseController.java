@@ -39,4 +39,11 @@ public class EnterpriseController {
 		enterpriseService.deleteById(id);
 		return ResponseEntity.noContent().build();
 	}
+	
+	@PutMapping("/update/{id}")
+	public ResponseEntity<Void> updateById(@PathVariable Long id, @RequestBody ResponseEnterpriseDto responseEnterpriseDto){
+		enterpriseService.updateEnterprise(id, responseEnterpriseDto);
+		return ResponseEntity.noContent().build();
+	}
+
 }

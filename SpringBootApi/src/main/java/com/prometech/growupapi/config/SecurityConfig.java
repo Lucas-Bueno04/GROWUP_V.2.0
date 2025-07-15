@@ -40,7 +40,14 @@ public class SecurityConfig {
 			"/api/v1/group",
 			"/api/v1/account",
 			"api/v1/enterprise",
-			"/api/v1/enterprise/**"
+			"/api/v1/enterprise/**",
+			"/api/v1/enterprise/create/**",
+			"/api/v1/enterprise/update/**",
+			"/api/v1/budget/create/**",
+			"/api/v1/budget/**",
+			"/api/v1/budget/update/**",
+			"/api/v1/budget/by-id/**",
+			"/api/v1/budget/by-email/**"
 	};
 	
 	public static  final String [] ENDPOINTS_CUSTOMER ={
@@ -57,7 +64,6 @@ public class SecurityConfig {
 			"/api/v1/account/update/**",
 			"/api/v1/account/delete/**",
 			"/api/v1/account/create/**",
-			"/api/v1/enterprise/create/**",
 		
 	};
 	

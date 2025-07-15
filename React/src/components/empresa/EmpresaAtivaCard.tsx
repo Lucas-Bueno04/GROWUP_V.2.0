@@ -2,12 +2,23 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building, FileText, Pencil } from "lucide-react";
+import { Building, FileText, Pencil, Trash } from "lucide-react";
 import { EditarEmpresaDialog } from "./EditarEmpresaDialog";
 import { DetalhesEmpresaCompleto } from "./DetalhesEmpresaCompleto";
 import { RegistrarHistoricoDialog } from "./RegistrarHistoricoDialog";
 import { CompanyMedal } from "./CompanyMedal";
 import { useCompanyBadge } from "@/hooks/useCompanyBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import axios from 'axios';
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { toast } from "sonner";
+import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from "react-router-dom";
+
+const API_ENDPOINT = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService()
+
 
 
 interface Size{
@@ -32,9 +43,44 @@ interface Enterprise{
 
 interface EmpresaAtivaCardProps {
   empresa: Enterprise;
+  onDeleteEnterprise?:()=>void;
 }
 
-export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
+const deleteEnterprise = async(id, token) :Promise<void>=>{
+  const response = await axios.delete(`${API_ENDPOINT}/enterprise/delete/${id}`,{
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+export function EmpresaAtivaCard({ empresa,onDeleteEnterprise }: EmpresaAtivaCardProps) {
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [token , setToken] = useState(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(()=>{
+    setToken(jwtService.getToken());
+  },[])
+
+
+  const handleDelete = async () => {
+  
+    try{
+      await deleteEnterprise(empresa.id, token);
+      toast({title:"Empresa excluida",description:"Empresa excluida com sucesso"});
+      setOpenDeleteDialog(false);
+      if(onDeleteEnterprise){
+        onDeleteEnterprise();
+      }
+      
+    }catch(error){
+      console.error("Erro ao excluir empresa:", error);
+    }
+    
+  };
   
 
   return (
@@ -73,14 +119,13 @@ export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
         <div className="flex-1 space-y-1 text-sm text-muted-foreground mb-4">
           <p className="truncate">Razão Social: {empresa.corporateName}</p>
           <p>CNPJ: {empresa.cnpj}</p>
-          <p>Setor: {empresa.sector}</p>
+          <p>Atividade: {empresa.sector}</p>
           <p>Porte: {empresa.size?.name??""}</p>
         </div>
 
         {/* Actions Footer */}
         <div className="pt-3 border-t border-slate-200 flex flex-wrap gap-2">
           <EditarEmpresaDialog 
-            empresaId={empresa.id}
             empresaData={empresa}
             trigger={
               <Button variant="outline" size="sm" className="flex-1">
@@ -89,15 +134,28 @@ export function EmpresaAtivaCard({ empresa }: EmpresaAtivaCardProps) {
               </Button>
             }
           />
-          <DetalhesEmpresaCompleto
-            empresa={empresa}
-            trigger={
-              <Button variant="outline" size="sm" className="flex-1">
-                <FileText size={14} className="mr-1" />
-                Detalhes
+          <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+            <DialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="flex-1">
+                <Trash size={14} className="mr-1" />
+                Excluir
               </Button>
-            }
-          />
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirmar Exclusão</DialogTitle>
+              </DialogHeader>
+              <p>Tem certeza que deseja excluir a empresa <strong>{empresa.tradeName || empresa.corporateName}</strong>?</p>
+              <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={()=>handleDelete()}>
+                  Confirmar Exclusão
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>

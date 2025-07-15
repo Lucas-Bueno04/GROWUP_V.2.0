@@ -24,16 +24,17 @@ interface Enterprise{
 
 interface EmpresasAtivasSectionProps {
   empresas: Enterprise[];
+  onDeleteEnterprises?:()=>void;
 }
 
-export function EmpresasAtivasSection({ empresas }: EmpresasAtivasSectionProps) {
+export function EmpresasAtivasSection({ empresas, onDeleteEnterprises }: EmpresasAtivasSectionProps) {
   return (
     <div className="space-y-4">
       {empresas.length === 0 ? (
         <p className="text-muted-foreground">Nenhuma empresa autorizada encontrada.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {empresas.map((empresa) => <EmpresaAtivaCard key={empresa.id} empresa={empresa} />)}
+          {empresas.map((empresa) => <EmpresaAtivaCard key={empresa.id} empresa={empresa} onDeleteEnterprise={onDeleteEnterprises}/>)}
         </div>
       )}
     </div>

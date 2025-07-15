@@ -13,7 +13,6 @@ import { useToast } from '@/components/ui/use-toast';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
 const token = new JwtService().getToken();
-console.log("Token enviado:", token);
 
 interface SizeDTO {
   name: string,

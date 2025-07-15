@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogFooter,
@@ -12,70 +11,59 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Save, Pencil } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { useClassificationBadges } from "@/hooks/useCompanyClassification";
+import axios from "axios";
+import { JwtService } from "@/components/auth/GetAuthParams";
 
-interface Size{
-  name,
-  minValue, 
-  maxValue
+interface Size {
+  name: string;
+  minValue: number;
+  maxValue: number;
 }
 
-interface Enterprise{
-  id:number,
-  cnpj:string,
-  corporateName:string,
-	tradeName:string,
-	phone:string,
-	email:string,
-	size:Size,
-	sector:string,
-	region:string,
-	invoicing:number,
-  taxRegime:string
+interface Enterprise {
+  id: number;
+  cnpj: string;
+  corporateName: string;
+  tradeName: string;
+  phone: string;
+  email: string;
+  size: Size;
+  sector: string;
+  region: string;
+  invoicing: number;
+  taxRegime: string;
 }
 
 interface EditarEmpresaDialogProps {
-  empresaId: number;
   empresaData: Enterprise;
   onSuccess?: () => void;
   trigger?: React.ReactNode;
 }
 
-// Função para formatar valor monetário
-const formatCurrency = (value: string) => {
-  // Remove tudo que não é dígito
-  const cleanValue = value.replace(/\D/g, '');
-  
-  // Converte para número e formata
-  const numberValue = parseFloat(cleanValue) / 100;
-  
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(numberValue);
-};
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const token = new JwtService().getToken();
 
-// Função para converter valor formatado para número
-const parseCurrency = (formattedValue: string): number => {
-  const cleanValue = formattedValue.replace(/[^\d]/g, '');
-  return parseFloat(cleanValue) / 100 || 0;
+const updateEnterprise = async (enterpriseData: Enterprise): Promise<void> => {
+  await axios.put(`${API_KEY}/enterprise/update/${enterpriseData.id}`, enterpriseData, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 };
 
 export function EditarEmpresaDialog({
-  empresaId,
   empresaData,
   onSuccess,
   trigger
@@ -83,16 +71,37 @@ export function EditarEmpresaDialog({
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("dados");
-  const [faturamentoFormatted, setFaturamentoFormatted] = useState("");
-  const [classificacaoAutomatica, setClassificacaoAutomatica] = useState("");
-  const [previousClassification, setPreviousClassification] = useState("");
   const { toast } = useToast();
-  const { data: faixas, isLoading: isLoadingFaixas } = useClassificationBadges();
+  const { data: faixas } = useClassificationBadges();
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch, control } = useForm({
-  });
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<Enterprise>();
 
+  useEffect(() => {
+    if (empresaData) {
+      reset(empresaData);
+    }
+  }, [empresaData, reset]);
 
+  const onSubmit = async (data: Enterprise) => {
+    try {
+      setIsSubmitting(true);
+      await updateEnterprise(data);
+      toast({ title: "Empresa atualizada com sucesso." });
+      setOpen(false);
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      toast({ variant: "destructive", title: "Erro ao atualizar empresa." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -111,139 +120,93 @@ export function EditarEmpresaDialog({
             Atualize as informações da empresa. A classificação será atualizada automaticamente com base no faturamento.
           </DialogDescription>
         </DialogHeader>
-        
-        <form className="space-y-4 mt-4">
+
+        <form className="space-y-4 mt-4" onSubmit={handleSubmit(onSubmit)}>
           <Tabs defaultValue="dados" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-3 mb-4">
               <TabsTrigger value="dados">Dados Oficiais</TabsTrigger>
               <TabsTrigger value="classificacao">Classificação</TabsTrigger>
               <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
             </TabsList>
-            
+
+            {/* DADOS OFICIAIS */}
             <TabsContent value="dados" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nome">Razão Social</Label>
-                <Input id="nome" value={empresaData.corporateName}/>
+                <Label htmlFor="corporateName">Razão Social</Label>
+                <Input id="corporateName" {...register("corporateName")} />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="nome_fantasia">Nome Fantasia</Label>
-                <Input id="nome_fantasia" {...register('nome_fantasia', { required: "Nome fantasia é obrigatório" })} />
+                <Label htmlFor="tradeName">Nome Fantasia</Label>
+                <Input id="tradeName" {...register("tradeName")} />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone</Label>
-                <Input id="telefone" {...register('telefone')} />
+                <Label htmlFor="phone">Telefone</Label>
+                <Input id="phone" {...register("phone")} />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="site">Website</Label>
-                <Input id="site" {...register('site')} placeholder="https://" />
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" {...register("email")} />
               </div>
             </TabsContent>
-            
+
+            {/* CLASSIFICAÇÃO */}
             <TabsContent value="classificacao" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="porte">Porte da Empresa</Label>
-                  {isLoadingFaixas ? (
-                    <div className="flex items-center justify-center h-10 border rounded-md">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : (
-                    <Select value={watch('porte')}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o porte" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {faixas?.map((faixa) => (
-                            <SelectItem key={faixa.id} value={faixa.nome}>
-                              {faixa.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                  {classificacaoAutomatica && (
-                    <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                      💡 Classificação automática baseada no faturamento: <strong>{classificacaoAutomatica}</strong>
-                    </p>
-                  )}
+                  <Label htmlFor="size">Porte da Empresa</Label>
+                  <Input
+                    id="size"
+                    value={empresaData.size?.name ?? ""}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
+                  />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="setor">Setor</Label>
-                  <Input id="sector" value={empresaData.sector}></Input>
+                  <Label htmlFor="sector">Atividade Principal</Label>
+                  <Input id="sector" {...register("sector")} />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="regime_tributario">Regime Tributário</Label>
-                  <Select value={empresaData.taxRegime}>
-                    <SelectTrigger>
+                  <Label>Regime Tributário</Label>
+                  <Select
+                    value={watch("taxRegime")}
+                    onValueChange={(value) => setValue("taxRegime", value)}
+                  >
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione o regime tributário" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="Simples Nacional">SIMPLES NACIONAL</SelectItem>
-                        <SelectItem value="Lucro Presumido">LUCRO PRESUMIDO</SelectItem>
-                        <SelectItem value="Lucro Real">LUCRO REAL</SelectItem>
-                        <SelectItem value="MEI">MEI</SelectItem>
-                      </SelectGroup>
+                      <SelectItem value="MEI">MEI</SelectItem>
+                      <SelectItem value="SIMPLES NACIONAL" className="text-black dark:text-white" >SIMPLES NACIONAL</SelectItem>
+                      <SelectItem value="LUCRO REAL" className="text-black dark:text-white">LUCRO REAL</SelectItem>
+                      <SelectItem value="LUCRO PRESUMIDO" className="text-black dark:text-white" >LUCRO PRESUMIDO</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="regiao">Região</Label>
-                  
+                  <Label htmlFor="region">Região</Label>
+                  <Input id="region" {...register("region")} />
                 </div>
               </div>
             </TabsContent>
 
+            {/* FINANCEIRO */}
             <TabsContent value="financeiro" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="faturamento_anual_anterior">Faturamento Anual Anterior</Label>
-                <Input 
-                  id="faturamento_anual_anterior" 
-                  value={faturamentoFormatted}
-                  placeholder="R$ 0,00"
-                />
+                <Label htmlFor="invoicing">Faturamento Anual Anterior</Label>
+                <Input id="invoicing" type="number" {...register("invoicing")} />
                 <p className="text-xs text-muted-foreground">
                   Este valor será usado para classificação automática da empresa por faixa de faturamento.
                 </p>
-                {faixas && faixas.length > 0 && (
-                  <div className="mt-2 p-3 bg-gray-50 rounded-md">
-                    <p className="text-sm font-medium mb-2">Faixas de Classificação:</p>
-                    <div className="space-y-1">
-                      {faixas.map((faixa) => (
-                        <div key={faixa.id} className="text-xs text-gray-600">
-                          <span className="font-medium">{faixa.nome}:</span> {
-                            new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(faixa.valor_minimo)
-                          } - {
-                            faixa.valor_maximo >= 999999999999 
-                              ? 'Acima de ' + new Intl.NumberFormat('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL'
-                                }).format(faixa.valor_minimo)
-                              : new Intl.NumberFormat('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL'
-                                }).format(faixa.valor_maximo)
-                          }
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </TabsContent>
           </Tabs>
-          
+
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
