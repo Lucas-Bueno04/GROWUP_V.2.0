@@ -1,67 +1,74 @@
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { CatIcon } from "lucide-react";
 
 const API_ENDPOINT_VALIDATE = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_LOGIN_VALIDATE;
 
 type JwtPayload = {
-  [key: string]: unknown; // para aceitar qualquer campo dinâmico
+  [key: string]: unknown; // permite acessar qualquer claim dinamicamente
 };
 
 export class JwtService {
   private tokenKey = "token"; // chave usada no localStorage para armazenar o token
-  private payload: JwtPayload | null = null;
 
-  constructor() {
-    const token = localStorage.getItem(this.tokenKey);
-    if (token) {
-      try {
-        this.payload = jwt_decode<JwtPayload>(token);
-      } catch (error) {
-        console.error("Token inválido:", error);
-        this.payload = null;
-      }
-    }
-  }
-
-  // Método para pegar qualquer informação do payload pelo nome da chave
-  public getClaim(claimName: string): unknown | null {
-    if (!this.payload) return null;
-    return this.payload[claimName] ?? null;
-  }
-
-  // Método para pegar o token completo (opcional)
+  // Retorna o token completo armazenado no localStorage
   public getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }
 
-  public hasRoles(requiredRoles?: string[]): boolean {
-  if (!requiredRoles || requiredRoles.length === 0) return true;
+  // Retorna o payload decodificado do token atual
+  private getDecodedPayload(): JwtPayload | null {
+    const token = this.getToken();
+    if (!token) return null;
 
-  const rolesClaim = this.getClaim("roles");
-
-  if (!Array.isArray(rolesClaim) || !rolesClaim.every(r => typeof r === "string")) {
-    return false;
+    try {
+      return jwt_decode<JwtPayload>(token);
+    } catch (error) {
+      console.error("Token inválido:", error);
+      return null;
+    }
   }
 
-  const userRoles = rolesClaim as string[];
+  // Retorna o valor de uma claim específica (como "sub", "roles", etc.)
+  public getClaim(claimName: string): unknown | null {
+    const payload = this.getDecodedPayload();
+    return payload ? payload[claimName] ?? null : null;
+  }
 
-  return requiredRoles.some(role => userRoles.includes(role));
-}
+  // Verifica se o token atual possui uma ou mais roles específicas
+  public hasRoles(requiredRoles?: string[]): boolean {
+    if (!requiredRoles || requiredRoles.length === 0) return true;
 
-  public async validateToken() {
+    const rolesClaim = this.getClaim("roles");
 
-    try{
-      const response = await axios.post(API_ENDPOINT_VALIDATE,{
-        token:this.getToken()
-      })
+    if (!Array.isArray(rolesClaim) || !rolesClaim.every((r) => typeof r === "string")) {
+      return false;
+    }
+
+    const userRoles = rolesClaim as string[];
+    return requiredRoles.some((role) => userRoles.includes(role));
+  }
+
+  // Valida o token no backend (opcional)
+  public async validateToken(): Promise<boolean> {
+    try {
+      const response = await axios.post(API_ENDPOINT_VALIDATE, {
+        token: this.getToken(),
+      });
 
       return response.data;
-
-    }catch(error){
+    } catch (error) {
       console.error("Erro ao validar Token:", error);
-      return false
+      return false;
     }
-    
+  }
+
+  // Armazena um novo token no localStorage
+  public setToken(token: string) {
+    localStorage.setItem(this.tokenKey, token);
+  }
+
+  // Remove o token (ex: logout)
+  public clearToken() {
+    localStorage.removeItem(this.tokenKey);
   }
 }

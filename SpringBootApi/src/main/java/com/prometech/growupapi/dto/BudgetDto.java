@@ -2,10 +2,11 @@ package com.prometech.growupapi.dto;
 
 import java.util.List;
 
-public record BudgetRequestDto(
+public record BudgetDto(
+		Long id,
 		Integer year,
 		Long enterpriseId,
 		String name,
 		List<MonthBudgetDto> months
-){
+) {
 }

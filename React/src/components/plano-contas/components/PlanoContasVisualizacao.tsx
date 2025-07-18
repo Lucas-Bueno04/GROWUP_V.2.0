@@ -13,7 +13,7 @@ import { JwtService } from "@/components/auth/GetAuthParams";
 import axios from 'axios';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
-const token = new JwtService().getToken();
+const jwtService = new JwtService();
 
 interface Account {
   id: number;
@@ -29,10 +29,10 @@ interface Group {
   // ordem?: number; // Descomente se estiver usando 'ordem' para ordenação
 }
 
-const getAllGroupsWithAccount = async (): Promise<Group[]> => {
+const getAllGroupsWithAccount = async (token:string): Promise<Group[]> => {
   const response = await axios.get(`${API_KEY}/group`, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`
     }
   });
 
@@ -46,7 +46,8 @@ export function PlanoContasVisualizacao() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const receivedGroups = await getAllGroupsWithAccount();
+        const token = jwtService.getToken();
+        const receivedGroups = await getAllGroupsWithAccount(token);
         setGroups(receivedGroups);
       } catch (error) {
         console.error("Erro ao buscar grupos: ", error);

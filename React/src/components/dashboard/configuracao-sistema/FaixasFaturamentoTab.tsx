@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useToast } from '@/components/ui/use-toast';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
-const token = new JwtService().getToken();
+const jwtService = new JwtService();
 
 interface SizeDTO {
   name: string,
@@ -24,35 +24,35 @@ interface Size extends SizeDTO {
   id: number
 }
 
-const getAllSizes = async (): Promise<Size[]> => {
+const getAllSizes = async (token:string): Promise<Size[]> => {
   const response = await axios.get(`${API_KEY}/size`, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`
     }
   });
   return response.data;
 }
 
-const createSize = async(data:SizeDTO):Promise<void>=>{
+const createSize = async(data:SizeDTO,token:string):Promise<void>=>{
   await axios.post(`${API_KEY}/size/create`,data,{
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`
     }
   })
 }
 
-const updateSize = async (id: number, data: SizeDTO): Promise<void> => {
+const updateSize = async (id: number, data: SizeDTO,token:string): Promise<void> => {
   await axios.put(`${API_KEY}/size/update/${id}`, data, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`
     }
   });
 }
 
-const deleteSize = async (id: number): Promise<void> => {
+const deleteSize = async (id: number,token:string): Promise<void> => {
   await axios.delete(`${API_KEY}/size/delete/${id}`, {
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`
     }
   });
 }
@@ -66,18 +66,21 @@ export function FaixasFaturamentoTab({ isLoadingFaixas }) {
   }, []);
 
   const loadSizes = async () => {
-    const data = await getAllSizes();
+    const token = jwtService.getToken();
+    const data = await getAllSizes(token);
     setSizes(data);
   }
 
   const handleDelete = async (id: number) => {
-    await deleteSize(id);
+    const token = jwtService.getToken();
+    await deleteSize(id, token);
     loadSizes();
   };
 
   const handleUpdate = async (size: Size) => {
     const { id, ...data } = size;
-    await updateSize(id, data);
+    const token = jwtService.getToken();
+    await updateSize(id, data,token);
     loadSizes();
   };
 
@@ -95,8 +98,8 @@ export function FaixasFaturamentoTab({ isLoadingFaixas }) {
     minValue: 0,
     maxValue: 0,
     };
-    
-    await createSize(newSize);
+    const token = jwtService.getToken();
+    await createSize(newSize,token);
     await loadSizes();
   };
 

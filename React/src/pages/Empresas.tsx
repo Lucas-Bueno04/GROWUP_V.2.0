@@ -1,70 +1,70 @@
-
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
-import { useEmpresas } from "@/hooks/use-empresas";
 import { NovaEmpresaAdminDialog } from "@/components/empresa/NovaEmpresaAdminDialog";
-import { EmpresasSearch } from "@/components/empresa/EmpresasSearch";
-import { EmpresasAguardandoSection } from "@/components/empresa/EmpresasAguardandoSection";
 import { EmpresasAtivasSection } from "@/components/empresa/EmpresasAtivasSection";
-import { useEmpresasFiltering } from "@/hooks/useEmpresasFiltering";
 import { JwtService } from "@/components/auth/GetAuthParams";
-import axios from 'axios';
-import { findEmpresaByCNPJ } from "@/services/empresa-mentorado-operations.service";
+import axios from "axios";
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
 const jwtService = new JwtService();
-interface Size{
-  name,
-  minValue, 
-  maxValue
+
+interface Size {
+  name: string;
+  minValue: number;
+  maxValue: number;
 }
 
-interface Enterprise{
-  id:number,
-  cnpj:string,
-  corporateName:string,
-	tradeName:string,
-	phone:string,
-	email:string,
-	size:Size,
-	sector:string,
-	region:string,
-	invoicing:number,
-  taxRegime:string
+interface Enterprise {
+  id: number;
+  cnpj: string;
+  corporateName: string;
+  tradeName: string;
+  phone: string;
+  email: string;
+  size: Size;
+  sector: string;
+  region: string;
+  invoicing: number;
+  taxRegime: string;
 }
 
-const FindEnterprisesByEmail = async (email, token):Promise<Enterprise[]>=>{
-  const response = await axios.get(`${API_KEY}/enterprise/${email}`,{
+const FindEnterprisesByEmail = async (
+  email: string,
+  token: string
+): Promise<Enterprise[]> => {
+  const response = await axios.get(`${API_KEY}/enterprise/${email}`, {
     headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   return response.data;
-}
-
+};
 
 const Empresas = () => {
- 
-  const [enterprises, setEnterprises] = useState([]);
-  const [token, setToken] = useState(null);
-  const [email, setEmail] = useState(null);
+  const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
 
-  useEffect(()=>{
-    setToken(jwtService.getToken());
-    setEmail(jwtService.getClaim("sub"));
-  },[])
+  const loadEnterprises = async () => {
+    const token = jwtService.getToken();
+    const email = jwtService.getClaim("sub") as string;
 
-  const loadEnterprises = async () =>{
-    const data = await FindEnterprisesByEmail(email, token);
-    setEnterprises(data);
-  }
-
-  useEffect(()=>{
-    if(email&&token){
-      loadEnterprises();
+    if (!token || !email) {
+      console.warn("Token ou e-mail não disponível.");
+      return;
     }
-  },[email, token]);
+
+    try {
+      const data = await FindEnterprisesByEmail(email, token);
+      console.log("Empresas carregadas:", data);
+      setEnterprises(data);
+    } catch (err) {
+      console.error("Erro ao buscar empresas:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadEnterprises();
+  }, []);
 
   return (
     <div className="h-full">
@@ -79,8 +79,8 @@ const Empresas = () => {
         <div className="space-y-6">
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Empresas Cadastradas</h2>
-            
-            <EmpresasAtivasSection 
+
+            <EmpresasAtivasSection
               empresas={enterprises}
               onDeleteEnterprises={loadEnterprises}
             />

@@ -40,6 +40,7 @@ import ConfiguracaoSistema from "@/pages/ConfiguracaoSistema";
 import PlanoContasUnifiedPage from "@/pages/mentor/PlanoContasUnifiedPage";
 import PainelIndicadores from "@/pages/mentor/PainelIndicadores";
 import { AuthGuard } from "./components/auth/AuthGuard";
+import BudgetEditor from "./pages/BudgetComponent";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
                   <Route path="/metas" element={<AuthGuard><Layout><Metas /></Layout></AuthGuard>} />
                   <Route path="/mentorado" element={<AuthGuard><Layout><Mentorado /></Layout></AuthGuard>}/>
                   <Route path="/empresas" element={<AuthGuard><Layout><Empresas /></Layout></AuthGuard>}/>
+                  <Route path="/orcamentos/:id" element={<AuthGuard><Layout><BudgetEditor /></Layout></AuthGuard>}/>
                   <Route path="/orcamentos" element={<AuthGuard><Layout><OrcamentosPage /></Layout></AuthGuard>} />
                   <Route path="/gestao/cards-estrategicos" element={<AuthGuard><Layout><CardsEstrategicos /></Layout></AuthGuard>} />
                   <Route path="/gestao/analise-orcamentaria" element={<AuthGuard><Layout><AnaliseOrcamentaria/></Layout></AuthGuard>} />

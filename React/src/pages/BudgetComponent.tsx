@@ -1,8 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Calendar, Trash2, ArrowLeft } from 'lucide-react';
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { Group } from '@/components/interfaces/Group';
+import { Budget } from '@/components/interfaces/Budget';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Enterprise } from '@/components/interfaces/Enterprise';
+import { toast } from "sonner";
+import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Pencil, Trash } from "lucide-react";
+
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
 const months = [
   "JANEIRO", "FEVEREIRO", "MARCO", "ABRIL",
@@ -10,49 +23,70 @@ const months = [
   "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"
 ];
 
-// MOCK
-const mockGroups = [
-  {
-    id: 1,
-    name: "Grupo Financeiro",
-    accounts: [
-      { id: 3, name: "Receita de Vendas" },
-      { id: 4, name: "Despesas Operacionais" }
-    ]
-  },
-  {
-    id: 2,
-    name: "Grupo Administrativo",
-    accounts: [
-      { id: 5, name: "Salários" },
-      { id: 6, name: "Manutenção" }
-    ]
-  }
-];
+const getBudgetById = async (id: number,email:string,  token: string): Promise<Budget> => {
+  const response = await axios.get(`${API_KEY}/budget/by-email-id/${email}/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
 
-const mockBudgetData = {
-  id: 'orc-01',
-  nome: 'Orçamento Anual 2025',
-  empresa: { nome: 'Empresa Exemplo Ltda.' },
-  ano: 2025,
-  year: 2025,
-  enterpriseId: 7,
-  months: months.map(month => ({
-    month,
-    values: [
-      { accountId: 3, valueType: "BUDGETED", value: 1000.0 },
-      { accountId: 4, valueType: "CARRIED", value: 800.0 },
-      { accountId: 5, valueType: "BUDGETED", value: 1500.0 },
-      { accountId: 6, valueType: "CARRIED", value: 600.0 }
-    ]
-  }))
+const getGroups = async (token: string): Promise<Group[]> => {
+  const response = await axios.get(`${API_KEY}/group`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+const getEnterpriseById = async (id: number, token: string): Promise<Enterprise> => {
+  const response = await axios.get(`${API_KEY}/enterprise/by-enterpriseId/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+const deleteBudgetById = async(id:number, token:string):Promise<void> => {
+  await axios.delete(`${API_KEY}/budget/delete/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+};
+
+const updateBudget = async (budget:Budget, token:string):Promise<void> => {
+  await axios.put(`${API_KEY}/budget/update`, budget, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
 };
 
 export default function BudgetEditor() {
-  const [data, setData] = useState(mockBudgetData);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [data, setData] = useState<Budget | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [enterprise, setEnterprise] = useState<Enterprise | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const getValue = (accountId, month, type) => {
-    const monthData = data.months.find(m => m.month === month);
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await jwtService.getToken();
+      const email = await jwtService.getClaim("sub") as string;
+      const groupsData = await getGroups(token);
+      const budgetData = await getBudgetById(Number(id), email, token);
+      setGroups(groupsData);
+      setData(budgetData);
+
+      if (budgetData.enterpriseId) {
+        const enterpriseData = await getEnterpriseById(budgetData.enterpriseId, token);
+        setEnterprise(enterpriseData);
+      }
+    };
+
+    if (id) {
+      fetchData();
+    }
+  }, [id]);
+
+  const getValue = (accountId: number, month: string, type: string) => {
+    const monthData = data?.months.find(m => m.month === month);
     if (!monthData) return '';
     const valueEntry = monthData.values.find(
       v => v.accountId === accountId && v.valueType === type
@@ -60,8 +94,9 @@ export default function BudgetEditor() {
     return valueEntry ? valueEntry.value : '';
   };
 
-  const handleChange = (accountId, month, value, type) => {
-    const newData = { ...data };
+  const handleChange = (accountId: number, month: string, value: string, type: string) => {
+    if (!data) return;
+    const newData = JSON.parse(JSON.stringify(data)); // Deep copy para preservar estrutura
     const monthData = newData.months.find(m => m.month === month);
     if (!monthData) return;
 
@@ -82,30 +117,39 @@ export default function BudgetEditor() {
     setData(newData);
   };
 
-  // Paleta de cores suave
-  const styleMap = {
-    BUDGETED: {
-      bg: 'bg-gray-900/40',
-      border: 'border-gray-700',
-      text: 'text-gray-300',
-      inputBorder: 'border-blue-500',
-      groupBg: 'bg-gray-800/70',
-      triggerBg: 'bg-blue-600/30',
-      triggerText: 'text-blue-300'
-    },
-    CARRIED: {
-      bg: 'bg-gray-900/40',
-      border: 'border-gray-700',
-      text: 'text-gray-300',
-      inputBorder: 'border-green-500',
-      groupBg: 'bg-gray-800/70',
-      triggerBg: 'bg-green-600/30',
-      triggerText: 'text-green-300'
+  const handleSave = async()=> {
+    console.log(data);
+    try{
+      const token = await jwtService.getToken();
+      await updateBudget(data, token);
+      toast({ title: "Orçamento Atualizado", description: "Orçamento atualizado com sucesso!." });
+
+    }catch(error){
+      console.log("Erro:", error);
+      toast({ title: "Erro ao atualizar orçamento", description: error });
     }
   };
 
-  const renderTable = (type) => {
-    const style = styleMap[type];
+  const handleDelete = async () => {
+    try {
+      setOpenDeleteDialog(false);
+      const token = await jwtService.getToken();
+      await deleteBudgetById(Number(id), token);
+      toast({ title: "Orçamento excluído", description: "Orçamento excluído com sucesso." });
+      navigate("/orcamentos");
+    } catch (error) {
+      toast({ title: "Erro ao excluir", description: "Não foi possível excluir o orçamento." });
+      console.error("Erro ao excluir orçamento", error);
+    }
+  };
+
+  const styleMap = {
+    BUDGETED: { inputBorder: 'border-gray-500' },
+    CARRIED: { inputBorder: 'border-gray-500' }
+  };
+
+  const renderTable = (type: string) => {
+    const style = styleMap[type as keyof typeof styleMap];
 
     return (
       <div className="overflow-auto rounded-md border border-gray-700">
@@ -126,11 +170,11 @@ export default function BudgetEditor() {
             </tr>
           </thead>
           <tbody>
-            {mockGroups.map(group => (
+            {groups.map(group => (
               <React.Fragment key={group.id}>
-                <tr className={`bg-gray-800/80 border-b ${style.border}`}>
+                <tr className={`bg-gray-800/80 border-b border-gray-700`}>
                   <td colSpan={months.length + 1} className="sticky left-0 p-2 font-bold text-gray-100">
-                    {group.name}
+                    {group.cod} - {group.name}
                   </td>
                 </tr>
                 {group.accounts.map(account => (
@@ -139,7 +183,7 @@ export default function BudgetEditor() {
                     className="bg-gray-900 hover:bg-gray-800 text-gray-300"
                   >
                     <td className="sticky left-0 bg-gray-900 p-2 border-r border-gray-700">
-                      {account.name}
+                      {account.cod} - {account.name}
                     </td>
                     {months.map(month => (
                       <td key={month} className="p-1 border-r border-gray-700 text-center">
@@ -150,7 +194,7 @@ export default function BudgetEditor() {
                           onChange={e =>
                             handleChange(account.id, month, e.target.value, type)
                           }
-                          className={`w-24 px-2 py-1 rounded bg-gray-800 text-right text-gray-100 border border-white/30 focus:outline-none focus:ring-1 focus:ring-white/50`}
+                          className={`w-24 px-2 py-1 rounded bg-gray-800 text-right text-gray-100 border ${style.inputBorder} focus:outline-none focus:ring-1 focus:ring-white/50`}
                         />
                       </td>
                     ))}
@@ -164,57 +208,76 @@ export default function BudgetEditor() {
     );
   };
 
-  // Função para excluir orçamento (exemplo simples)
-  const handleDelete = () => {
-    if (confirm(`Deseja realmente excluir o orçamento "${data.nome}"?`)) {
-      alert('Orçamento excluído (simulação).');
-      // Aqui você pode implementar lógica real para exclusão
-    }
-  };
+  if (!data) return <p className="text-gray-400">Carregando orçamento...</p>;
 
   return (
     <>
-      {/* Botão de retornar (sem função) */}
       <Button
         variant="outline"
         className="mb-4 flex items-center gap-2 w-max"
+        onClick={() => navigate("/orcamentos")}
       >
         <ArrowLeft className="h-4 w-4" />
         Retornar
       </Button>
 
       <div className="space-y-6">
-        {/* Área do resumo do orçamento */}
         <Card className="bg-gray-800 border border-gray-700">
           <CardHeader>
-            <CardTitle className="text-3xl text-gray-100">{data.nome}</CardTitle>
+            <CardTitle className="text-3xl text-gray-100">{data.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-col space-y-2 text-gray-300 text-sm">
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-blue-400" />
-                  <span>{data.empresa?.nome || 'Empresa não encontrada'}</span>
+                  <span>{enterprise?.corporateName || 'Empresa não encontrada'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-green-400" />
-                  <span>Ano {data.ano}</span>
+                  <span>Ano {data.year}</span>
                 </div>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Excluir Orçamento
-              </Button>
+
+              {/* Botões Salvar e Excluir lado a lado */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  onClick={handleSave}
+                >
+                  <Pencil size={14} className="h-4 w-4" />
+                  Salvar
+                </Button>
+
+                <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="flex items-center gap-2">
+                      <Trash size={14} className="h-4 w-4" />
+                      Excluir
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Confirmar Exclusão</DialogTitle>
+                    </DialogHeader>
+                    <p>Tem certeza que deseja excluir o orçamento  <strong>{data.name || data.id}</strong>?</p>
+                    <DialogFooter className="mt-4">
+                      <Button variant="outline" onClick={() => setOpenDeleteDialog(false)}>
+                        Cancelar
+                      </Button>
+                      <Button variant="destructive" onClick={handleDelete}>
+                        Confirmar Exclusão
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Área das abas e tabelas */}
         <Tabs defaultValue="BUDGETED" className="w-full">
           <TabsList className="grid grid-cols-2 bg-gray-800 border border-gray-700 rounded overflow-hidden">
             <TabsTrigger

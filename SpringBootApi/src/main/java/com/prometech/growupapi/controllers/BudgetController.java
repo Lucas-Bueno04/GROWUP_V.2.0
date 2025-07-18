@@ -1,8 +1,7 @@
 package com.prometech.growupapi.controllers;
 
-import com.prometech.growupapi.domain.Budget;
+import com.prometech.growupapi.dto.BudgetDto;
 import com.prometech.growupapi.dto.BudgetRequestDto;
-import com.prometech.growupapi.repositories.BudgetRepository;
 import com.prometech.growupapi.services.BudgetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,28 +24,37 @@ public class BudgetController {
 	}
 	
 	@GetMapping("/by-email/{email}")
-	public ResponseEntity<List<BudgetRequestDto>> getByUserEmail(@PathVariable String email){
-		List<BudgetRequestDto> budgets =  budgetService.getAllBudgetsByUserEmail(email);
+	public ResponseEntity<List<BudgetDto>> getByUserEmail(@PathVariable String email){
+		List<BudgetDto> budgets =  budgetService.getAllBudgetsByUserEmail(email);
 		
 		return  ResponseEntity.ok(budgets);
 	}
-	
-	@GetMapping("/by-id/{id}")
-	public ResponseEntity<BudgetRequestDto> getBudgetById(@PathVariable Long id){
-		BudgetRequestDto budget = budgetService.getBudgetById(id);
+
+	@GetMapping("/by-email-id/{email}/{id}")
+	public ResponseEntity<?> getBudgetById(@PathVariable String email, @PathVariable Long id) {
 		
-		return  ResponseEntity.ok(budget);
+		BudgetDto budget = budgetService.getBudgetById(id);
+		
+		boolean hasAccess = budgetService.userHasAccessToBudget(budget.id(), email);
+		
+		if (hasAccess) {
+			return ResponseEntity.ok(budget);
+		} else {
+			return ResponseEntity
+					       .status(HttpStatus.FORBIDDEN)
+					       .body("Usuário não tem acesso a esse orçamento");
+		}
 	}
 	
-	@DeleteMapping("/{id}")
+	@DeleteMapping("delete/{id}")
 	public ResponseEntity<Void> deleteById(@PathVariable Long id){
 		budgetService.deleteBudget(id);
 		return ResponseEntity.noContent().build();
 	}
 	
-	@PostMapping("/update/{id}")
-	public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody BudgetRequestDto budgetRequestDto){
-		budgetService.updateBudget(id, budgetRequestDto);
+	@PutMapping("/update")
+	public ResponseEntity<Void> update(@RequestBody BudgetDto budgetDto){
+		budgetService.updateBudget(budgetDto);
 		return  ResponseEntity.status(HttpStatus.OK).build();
 	}
 }

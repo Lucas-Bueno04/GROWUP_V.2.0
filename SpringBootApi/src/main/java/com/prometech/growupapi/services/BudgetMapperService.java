@@ -4,7 +4,7 @@ import com.prometech.growupapi.domain.AccountValue;
 import com.prometech.growupapi.domain.Budget;
 import com.prometech.growupapi.domain.MonthBudget;
 import com.prometech.growupapi.dto.AccountValueDto;
-import com.prometech.growupapi.dto.BudgetRequestDto;
+import com.prometech.growupapi.dto.BudgetDto;
 import com.prometech.growupapi.dto.MonthBudgetDto;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +12,9 @@ import org.springframework.stereotype.Service;
 public class BudgetMapperService {
 
 
-	public static BudgetRequestDto toDto(Budget budget) {
-		return new BudgetRequestDto(
+	public static BudgetDto toDto(Budget budget) {
+		return new BudgetDto(
+				budget.getId(),
 				budget.getYear(),
 				budget.getEnterprise().getId(),
 				budget.getName(),

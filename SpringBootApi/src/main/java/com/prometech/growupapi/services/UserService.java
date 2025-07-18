@@ -32,7 +32,7 @@ public class UserService {
 	private UserRepository userRepository;
 	
 	@Autowired
-	private SecurityConfig securityConfig;
+	private   SecurityConfig securityConfig;
 	
 	public RecoveryJwtTokenDto authenticateUser (LoginUserDto loginUserDto){
 		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginUserDto.email(), loginUserDto.password());

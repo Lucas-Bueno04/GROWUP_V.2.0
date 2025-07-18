@@ -13,7 +13,7 @@ import { JwtService } from "@/components/auth/GetAuthParams";
 import axios from 'axios';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
-const token = new JwtService().getToken();
+const jwtService  = new JwtService();
 
 interface Account {
   id: number;
@@ -45,7 +45,7 @@ interface GroupCreateDTO{
 
 
 
-const getAllGroupsWithAccount = async (): Promise<Group[]> => {
+const getAllGroupsWithAccount = async (token:string): Promise<Group[]> => {
   const response = await axios.get(`${API_KEY}/group`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -55,7 +55,7 @@ const getAllGroupsWithAccount = async (): Promise<Group[]> => {
   return response.data;
 };
 
-const deleteGroupById = async (id:number): Promise<void> =>{
+const deleteGroupById = async (id:number,token:string): Promise<void> =>{
   const response = await axios.delete(`${API_KEY}/group/delete/${id}`,{
     headers: {
       Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ const deleteGroupById = async (id:number): Promise<void> =>{
   })
 }
 
-const deleteAccountById = async(id:number):Promise<void>=>{
+const deleteAccountById = async(id:number,token:string):Promise<void>=>{
   const response = await axios.delete(`${API_KEY}/account/delete/${id}`,{
     headers: {
       Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ const deleteAccountById = async(id:number):Promise<void>=>{
   })
 }
 
-const updateGroup = async(id:number, group:Group):Promise<Group>=>{
+const updateGroup = async(id:number, group:Group,token:string):Promise<Group>=>{
   const response = await axios.put(`${API_KEY}/group/update/${id}`,group,{
     headers: {
       Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const updateGroup = async(id:number, group:Group):Promise<Group>=>{
   return response.data;
 }
 
-const updateAccount = async(id:number, account:Account):Promise<Account>=>{
+const updateAccount = async(id:number, account:Account,token:string):Promise<Account>=>{
   const response = await axios.put(`${API_KEY}/account/update/${id}`, account, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -91,7 +91,7 @@ const updateAccount = async(id:number, account:Account):Promise<Account>=>{
   return response.data;
 }
 
-const createGroup = async(group:GroupCreateDTO):Promise<Group>=>{
+const createGroup = async(group:GroupCreateDTO,token:string):Promise<Group>=>{
   const response = await axios.post(`${API_KEY}/group/create`, group, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,7 +101,7 @@ const createGroup = async(group:GroupCreateDTO):Promise<Group>=>{
   return response.data;
 }
 
-const createAccount = async (account: AccountDTO):Promise<Account>=>{
+const createAccount = async (account: AccountDTO,token:string):Promise<Account>=>{
   const response = await axios.post(`${API_KEY}/account/create`,account,{
     headers: {
       Authorization: `Bearer ${token}`,
@@ -116,20 +116,17 @@ export function GruposContasUnificado() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [token, setToken] = useState(null);
 
 
 
-  const getAuthHeaders = () => {
-    const token = new JwtService().getToken();
-    return { Authorization: `Bearer ${token}` };
-  };
 
   const fetchData = async () => {
     try {
-      const response = await axios.get<Group[]>(`${API_KEY}/group`, {
-        headers: getAuthHeaders(),
-      });
-      setGroups(response.data);
+      const token =await jwtService.getToken()
+      setToken(token)
+      const groups = await getAllGroupsWithAccount(token)
+      setGroups(groups);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
     }
@@ -149,7 +146,8 @@ export function GruposContasUnificado() {
           id:groupId
         },
       };
-      await createAccount(newAccount);
+      const token = jwtService.getToken()
+      await createAccount(newAccount, token);
       await fetchData();
       toast({ title: "Conta criada com sucesso!" });
     } catch (error) {
@@ -159,7 +157,7 @@ export function GruposContasUnificado() {
 
   const handleEditGrupo = async (group: Group) => {
     try {
-      await updateGroup(group.id, group);
+      await updateGroup(group.id, group,token);
       await fetchData();
       toast({ title: "Grupo atualizado com sucesso!" });
     } catch (error) {
@@ -169,7 +167,7 @@ export function GruposContasUnificado() {
 
   const handleDeleteGrupo = async (groupId: number) => {
     try {
-      await deleteGroupById(groupId);
+      await deleteGroupById(groupId,token);
       await fetchData();
       toast({ title: "Grupo deletado com sucesso!" });
     } catch (error) {
@@ -179,7 +177,7 @@ export function GruposContasUnificado() {
 
   const handleEditConta = async (account: Account) => {
     try {
-      await updateAccount(account.id, account);
+      await updateAccount(account.id, account,token);
       await fetchData();
       toast({ title: "Conta atualizada com sucesso!" });
     } catch (error) {
@@ -189,7 +187,7 @@ export function GruposContasUnificado() {
 
   const handleDeleteConta = async (accountId: number) => {
     try {
-      await deleteAccountById(accountId);
+      await deleteAccountById(accountId,token);
       await fetchData();
       toast({ title: "Conta deletada com sucesso!" });
     } catch (error) {
@@ -204,7 +202,7 @@ export function GruposContasUnificado() {
         name: "",
         accounts: [],
       };
-      await createGroup(newGroup);
+      await createGroup(newGroup,token);
       await fetchData();
       toast({ title: "Grupo criado com sucesso!" });
     } catch (error) {
