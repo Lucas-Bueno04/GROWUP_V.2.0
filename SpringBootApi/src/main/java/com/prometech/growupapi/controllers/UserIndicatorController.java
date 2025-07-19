@@ -18,15 +18,15 @@ public class UserIndicatorController {
 	UserIndicatorService userIndicatorService;
 	
 
-	@PostMapping("/create")
-	public ResponseEntity<Void> create(@PathVariable Long userId, @RequestBody IndicatorRequestDto dto) {
-		userIndicatorService.create(userId, dto);
+	@PostMapping("/create/{email}")
+	public ResponseEntity<Void> create(@PathVariable String email, @RequestBody IndicatorRequestDto dto) {
+		userIndicatorService.create(email, dto);
 		return new ResponseEntity<>(HttpStatus.CREATED);
 	}
 	
-	@GetMapping("/by-user-id/{userId}")
-	public ResponseEntity<List<IndicatorResponseDto>> getAllByUser(@PathVariable Long userId) {
-		List<IndicatorResponseDto> list = userIndicatorService.findByUserId(userId);
+	@GetMapping("/by-user-email/{email}")
+	public ResponseEntity<List<IndicatorResponseDto>> getAllByUser(@PathVariable String email) {
+		List<IndicatorResponseDto> list = userIndicatorService.findByUserId(email);
 		return ResponseEntity.ok(list);
 	}
 	
@@ -37,7 +37,7 @@ public class UserIndicatorController {
 				       .orElse(ResponseEntity.notFound().build());
 	}
 	
-	@DeleteMapping("/delete/{id}")
+	@DeleteMapping("/delete/by-id/{id}")
 	public ResponseEntity<Void> delete(@PathVariable Long id) {
 		userIndicatorService.delete(id);
 		return ResponseEntity.noContent().build();

@@ -29,6 +29,14 @@ public class BudgetController {
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 	
+	@GetMapping("/by-id/{id}")
+	public ResponseEntity<String> getBudgetNameById(@PathVariable Long id){
+		BudgetDto budgetDto = budgetService.getBudgetById(id);
+		
+		return  ResponseEntity.ok(budgetDto.name());
+		
+	}
+	
 	@GetMapping("/by-email/{email}")
 	public ResponseEntity<List<BudgetDto>> getByUserEmail(@PathVariable String email){
 		List<BudgetDto> budgets =  budgetService.getAllBudgetsByUserEmail(email);

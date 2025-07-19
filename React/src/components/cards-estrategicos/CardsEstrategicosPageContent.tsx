@@ -1,90 +1,126 @@
-
-import React from 'react';
-import { CardsEstrategicosControls } from './CardsEstrategicosControls';
+import React, { useEffect, useState } from 'react';
 import { CardsEstrategicosEmpresaHeader } from './CardsEstrategicosEmpresaHeader';
 import { CardsEstrategicosStats } from './CardsEstrategicosStats';
 import { CardsEstrategicosContent } from './CardsEstrategicosContent';
-import { CardsEstrategicosLoadingState, CardsEstrategicosErrorState, CardsEstrategicosEmptyState } from '@/components/cards-estrategicos';
-import type { CardsEstrategicosFilters as FiltersType, IndicadorEstrategico } from '@/hooks/cards-estrategicos';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import axios from 'axios';
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { IndicatorResponse } from '../interfaces/IndicadorResponse';
+import { ResultRequest } from '../interfaces/ResultRequest';
+import { FormulaRequest } from '../interfaces/FormulaRequest';
 
-interface CardsEstrategicosPageContentProps {
-  empresaId: string | null;
-  setEmpresaId: (empresaId: string | null) => void;
-  handleRefresh: () => void;
-  filters: FiltersType;
-  setFilters: (filters: FiltersType) => void;
-  stats: any;
-  indicadoresFiltrados: IndicadorEstrategico[];
-  empresasDisponiveis: any[];
-  isLoading: boolean;
-  error: Error | null;
-  indicadores: IndicadorEstrategico[] | undefined;
-}
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
-export function CardsEstrategicosPageContent({
-  empresaId,
-  setEmpresaId,
-  handleRefresh,
-  filters,
-  setFilters,
-  stats,
-  indicadoresFiltrados,
-  empresasDisponiveis,
-  isLoading,
-  error,
-  indicadores
-}: CardsEstrategicosPageContentProps) {
+const getAllAdminIndicators = async (token: string): Promise<IndicatorResponse[]> => {
+    const response = await axios.get(`${API_KEY}/indicator/admin-indicator`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  };
+
+const getAllUserIndicators = async (email: string, token: string): Promise<IndicatorResponse[]> => {
+    const response = await axios.get(`${API_KEY}/indicator/user-indicator/by-user-email/${email}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  };
+
+const getBudgetNameById = async(id:number, token:string):Promise<string>=>{
+    const response = await axios.get(`${API_KEY}/budget/by-id/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  }
+
+const getEvaluatedData = async (
+    id: number,
+    token: string,
+    data:FormulaRequest
+  ):Promise<ResultRequest> => {
+    const response = await axios.post(`${API_KEY}/analist/formula/evaluate/${id}`, data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  };
+
+
+export function CardsEstrategicosPageContent() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    total: 0,
+    acima: 0,
+    dentro: 0,
+    abaixo: 0,
+  });
+
+  const [indicadoresPlanoDeContas, setIndicadoresPlanoDeContas] = useState<IndicatorResponse[]>([]);
+  const [indicadoresPessoais, setIndicadoresPessoais] = useState<IndicatorResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [budgetName, setBudgetName] = useState<string | null>(null);
+  const [meses, setMeses] = useState([]);
+  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await jwtService.getToken() || '';
+      if (id) {
+        const budgetName = await getBudgetNameById(Number(id), token);
+        setBudgetName(budgetName);
+      }
+    };
+    fetchData();
+  }, [id]);
+
+  const loadCards = async () => {
+    setLoading(true);
+    try {
+      const token = await jwtService.getToken() || '';
+      const email = await jwtService.getClaim("sub") as string || "";
+      const dataAdmin = await getAllAdminIndicators(token);
+      const dataPessoal = await getAllUserIndicators(email, token);
+      console.log("dados:", dataAdmin, dataPessoal);
+      setIndicadoresPessoais(dataPessoal);
+      setIndicadoresPlanoDeContas(dataAdmin);
+    } catch (error) {
+      console.error("Erro ao carregar indicadores:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(()=>{
+     if (id) {
+    loadCards();
+  }
+  },[id])
+
   return (
     <div className="space-y-6">
-      {/* Company Selector - Always visible */}
-      <CardsEstrategicosControls
-        empresaId={empresaId}
-        onEmpresaChange={setEmpresaId}
-        onRefresh={handleRefresh}
+      <Button variant="outline" className="mb-4 flex gap-2 items-center" onClick={() => navigate("/gestao/cards-estrategicos")}>
+        <ArrowLeft className="w-4 h-4" /> Retornar
+      </Button>
+
+      <CardsEstrategicosEmpresaHeader budgetName={budgetName} setMeses = {setMeses} />
+
+      <CardsEstrategicosStats stats={stats} />
+
+      
+      {loading ? (
+      <p>Carregando indicadores...</p>
+    ) : (
+      <CardsEstrategicosContent
+        indicadoresPlanoDeContas={indicadoresPlanoDeContas}
+        indicadoresPessoais={indicadoresPessoais}
+        id={Number(id)}
+        meses={meses}
       />
-      
-      {/* Company Header with Badge and Filters - Only when company is selected */}
-      {empresaId && (
-        <CardsEstrategicosEmpresaHeader
-          empresaId={empresaId}
-          filters={filters}
-          onFiltersChange={setFilters}
-        />
-      )}
-      
-      {/* Loading state for indicators */}
-      {empresaId && isLoading && <CardsEstrategicosLoadingState />}
-      
-      {/* Error state for indicators */}
-      {empresaId && error && (
-        <CardsEstrategicosErrorState error={error} onRefresh={handleRefresh} />
-      )}
-      
-      {/* Empty state when no indicators */}
-      {empresaId && !isLoading && !error && (!indicadores || indicadores.length === 0) && (
-        <CardsEstrategicosEmptyState
-          empresaId={empresaId}
-          onEmpresaChange={setEmpresaId}
-          onRefresh={handleRefresh}
-          metasIndicadoresCount={0}
-          metasIndicadoresEmpresaCount={0}
-          indicadoresEmpresaCount={0}
-          showDebugInfo={false}
-          ano={new Date().getFullYear()}
-        />
-      )}
-      
-      {/* Stats Summary - Only when company is selected and has data */}
-      {empresaId && stats && indicadores && indicadores.length > 0 && (
-        <CardsEstrategicosStats stats={stats} />
-      )}
-      
-      {/* Main Content - Only when company is selected and has data */}
-      {empresaId && !isLoading && !error && indicadores && indicadores.length > 0 && (
-        <CardsEstrategicosContent 
-          indicadoresFiltrados={indicadoresFiltrados}
-        />
-      )}
+    )}
+
     </div>
   );
 }

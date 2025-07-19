@@ -1,75 +1,171 @@
+import React, { useEffect, useState } from 'react';
+import { StrategicCard } from '@/components/cards-estrategicos';
+import { IndicatorResponse } from '../interfaces/IndicadorResponse';
+import { ResultRequest } from '../interfaces/ResultRequest';
+import { FormulaRequest } from '../interfaces/FormulaRequest';
+import { JwtService } from '@/components/auth/GetAuthParams';
+import axios from 'axios';
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { IndicadorEstrategico } from '@/hooks/cards-estrategicos';
-import { StrategicCard, StrategicChart, StrategicList } from '@/components/cards-estrategicos';
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
 interface CardsEstrategicosContentProps {
-  indicadoresFiltrados: IndicadorEstrategico[];
+  indicadoresPlanoDeContas: IndicatorResponse[];
+  indicadoresPessoais: IndicatorResponse[];
+  meses: string[];
+  id: number;  // Este é o id do budget, usado na chamada da API
 }
 
-export function CardsEstrategicosContent({ indicadoresFiltrados }: CardsEstrategicosContentProps) {
-  const renderIndicador = (indicador: IndicadorEstrategico) => {
-    const codigo = indicador.codigo || 'N/A';
-    console.log(`Rendering indicator ${codigo} with visualization type: ${indicador.tipoVisualizacao}`);
-    
-    switch (indicador.tipoVisualizacao) {
-      case 'chart':
-        return <StrategicChart key={indicador.id} indicadorEstrategico={indicador} />;
-      case 'list':
-        return <StrategicList key={indicador.id} indicadorEstrategico={indicador} />;
-      default:
-        return <StrategicCard key={indicador.id} indicadorEstrategico={indicador} />;
+const getEvaluatedData = async (
+  budgetId: number,
+  token: string,
+  data: FormulaRequest,
+): Promise<ResultRequest> => {
+  const response = await axios.post(
+    `${API_KEY}/analist/formula/evaluate/${budgetId}`,
+    data,
+    {
+      headers: { Authorization: `Bearer ${token}` },
     }
+  );
+  return response.data;
+};
+
+export function CardsEstrategicosContent({
+  indicadoresPlanoDeContas,
+  indicadoresPessoais,
+  meses,
+  id,  // aqui o id é o budgetId
+}: CardsEstrategicosContentProps) {
+  
+  const [loading, setLoading] = useState(true);
+
+  // Guarda os resultados indexados pelo indicadorId
+  const [resultados, setResultados] = useState<Record<number, ResultRequest>>({});
+
+  useEffect(() => {
+  console.log('Indicadores do Plano de Contas recebidos:', indicadoresPlanoDeContas);
+  }, [indicadoresPlanoDeContas]);
+
+  useEffect(() => {
+    console.log('Indicadores Pessoais recebidos:', indicadoresPessoais);
+  }, [indicadoresPessoais]);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      setLoading(true);
+      try {
+        const token = await jwtService.getToken();
+
+        // Para cada indicador, monta os dados da fórmula e busca resultado
+        const fetchResult = async (indicador: IndicatorResponse) => {
+          const data: FormulaRequest = {
+            formula: indicador.formula,
+            months: meses,
+          };
+          const response = await getEvaluatedData(id, token, data);
+          console.log(response)
+          return response
+        };
+
+        // Resultados para Plano de Contas
+        const resultsPlanoDeContas = await Promise.all(
+          indicadoresPlanoDeContas.map(async (indicador) => {
+            const res = await fetchResult(indicador);
+            return { id: indicador.id, result: res };
+          })
+        );
+
+        // Resultados para Indicadores Pessoais
+        const resultsPessoais = await Promise.all(
+          indicadoresPessoais.map(async (indicador) => {
+            const res = await fetchResult(indicador);
+            return { id: indicador.id, result: res };
+          })
+        );
+
+        // Junta todos resultados num único objeto para fácil acesso
+        const allResults: Record<number, ResultRequest> = {};
+
+        resultsPlanoDeContas.forEach(({ id, result }) => {
+          allResults[id] = result;
+        });
+        resultsPessoais.forEach(({ id, result }) => {
+          allResults[id] = result;
+        });
+
+        setResultados(allResults);
+      } catch (error) {
+        console.error('Erro ao carregar resultados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [indicadoresPlanoDeContas, indicadoresPessoais, meses, id]);  // Inclui 'id' para atualizar se mudar
+
+  const calculaStatus = (result?: ResultRequest) => {
+    if (!result) return 'indefinido';
+    if (result.carriedResult > result.budgetedResult) return 'acima';
+    if (result.carriedResult < result.budgetedResult) return 'abaixo';
+    return 'dentro';
   };
-
-  // Separar indicadores por tipo
-  const indicadoresPlanoContas = indicadoresFiltrados.filter(i => i.tipo === 'plano-contas');
-  const indicadoresPropriosEmpresa = indicadoresFiltrados
-    .filter(i => i.tipo === 'empresa')
-    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0)); // Ordenar por campo ordem
-
-  if (indicadoresFiltrados.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <p className="text-lg font-medium">Nenhum indicador corresponde aos filtros</p>
-            <p className="text-muted-foreground">
-              Ajuste os filtros para ver mais resultados
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      {/* Indicadores do Plano de Contas */}
-      {indicadoresPlanoContas.length > 0 && (
+      {loading && <p>Carregando indicadores...</p>}
+
+      {!loading && indicadoresPlanoDeContas.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-1 h-6 bg-blue-500 rounded"></div>
             <h3 className="text-lg font-semibold">Indicadores do Plano de Contas</h3>
-            <span className="text-sm text-muted-foreground">({indicadoresPlanoContas.length})</span>
+            <span className="text-sm text-muted-foreground">
+              ({indicadoresPlanoDeContas.length})
+            </span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-            {indicadoresPlanoContas.map(renderIndicador)}
+            {indicadoresPlanoDeContas.map((indicador) => {
+              const result = resultados[indicador.id];
+              const status = calculaStatus(result);
+              return (
+                <StrategicCard
+                  key={indicador.id}
+                  indicadorEstrategico={indicador}
+                  result={result}
+                  status={status}
+                  tipo="plano-contas"
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Indicadores Próprios da Empresa - Grade Única Ordenada */}
-      {indicadoresPropriosEmpresa.length > 0 && (
+      {!loading && indicadoresPessoais.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-1 h-6 bg-green-500 rounded"></div>
             <h3 className="text-lg font-semibold">Indicadores Próprios da Empresa</h3>
-            <span className="text-sm text-muted-foreground">({indicadoresPropriosEmpresa.length})</span>
+            <span className="text-sm text-muted-foreground">
+              ({indicadoresPessoais.length})
+            </span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-            {indicadoresPropriosEmpresa.map(renderIndicador)}
+            {indicadoresPessoais.map((indicador) => {
+              const result = resultados[indicador.id];
+              const status = calculaStatus(result);
+              return (
+                <StrategicCard
+                  key={indicador.id}
+                  indicadorEstrategico={indicador}
+                  result={result}
+                  status={status}
+                  tipo="empresa"
+                />
+              );
+            })}
           </div>
         </div>
       )}

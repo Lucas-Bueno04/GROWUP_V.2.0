@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { HelmetProvider } from "@/components/shared/HelmetProvider";
 import { Layout } from "@/components/layout/Layout";
+import { CardsEstrategicosPageContent } from '@/components/cards-estrategicos/CardsEstrategicosPageContent';
 
 // Páginas públicas
 import Index from "@/pages/Index";
@@ -65,6 +66,7 @@ function App() {
                   <Route path="/empresas" element={<AuthGuard><Layout><Empresas /></Layout></AuthGuard>}/>
                   <Route path="/orcamentos/:id" element={<AuthGuard><Layout><BudgetEditor /></Layout></AuthGuard>}/>
                   <Route path="/orcamentos" element={<AuthGuard><Layout><OrcamentosPage /></Layout></AuthGuard>} />
+                  <Route path="/gestao/cards-estrategicos/:id" element={<AuthGuard><Layout><CardsEstrategicosPageContent /></Layout></AuthGuard>} />
                   <Route path="/gestao/cards-estrategicos" element={<AuthGuard><Layout><CardsEstrategicos /></Layout></AuthGuard>} />
                   <Route path="/gestao/analise-orcamentaria" element={<AuthGuard><Layout><AnaliseOrcamentaria/></Layout></AuthGuard>} />
 

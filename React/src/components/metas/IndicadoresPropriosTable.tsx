@@ -32,9 +32,6 @@ export function IndicadoresPropriosTable({
         metasIndicadoresProprios={metasIndicadoresProprios}
       />
       
-      <MetasIndicadoresPropriosTable 
-        metasIndicadoresProprios={metasIndicadoresProprios}
-      />
     </div>
   );
 }

@@ -47,6 +47,7 @@ public class SecurityConfig {
 			"/api/v1/budget/**",
 			"/api/v1/budget/update/**",
 			"/api/v1/budget/by-email-id/**",
+			"/api/v1/budget/by-id/**",
 			"/api/v1/budget/by-email/**",
 			"/api/v1/budget/delete/**",
 			"/api/v1/budget/filter-months/**",
@@ -54,13 +55,22 @@ public class SecurityConfig {
 			"/api/v1/analist/**",
 			"/api/v1/analist/test/**",
 			"/api/v1/indicator/user-indicator/**",
+			"/api/v1/indicator/user-indicator/create",
 			"/api/v1/indicator/user-indicator/create/**",
 			"/api/v1/indicator/user-indicator/by-user-id/**",
 			"/api/v1/indicator/user-indicator/by-id/**",
 			"/api/v1/indicator/user-indicator/delete/**",
 			"/api/v1/indicator/admin-indicator",
 			"/api/v1/indicator/admin-indicator/by-id/**",
-			
+			"/api/v1/analist",
+			"/api/v1/analist/**",
+			"/api/v1/analist/group-sum/months/**",
+			"/api/v1/analist/account-sum/months/**",
+			"/api/v1/analist/group-average/months/**",
+			"/api/v1/analist/account-average/months/**",
+			"/api/v1/analist/net-revenue/month/**",
+			"/api/v1/analist/net-revenue/budget/**",
+			"/api/v1/analist/formula/evaluate/**"
 	};
 	
 	public static  final String [] ENDPOINTS_CUSTOMER ={

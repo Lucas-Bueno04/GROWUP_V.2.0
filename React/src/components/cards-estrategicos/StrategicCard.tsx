@@ -3,18 +3,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Target, Calendar } from 'lucide-react';
 import { IndicadorEstrategico } from '@/hooks/cards-estrategicos';
-
+import { IndicatorResponse } from '../interfaces/IndicadorResponse';
+import { ResultRequest } from '../interfaces/ResultRequest';
 interface StrategicCardProps {
-  indicadorEstrategico: IndicadorEstrategico;
+  indicadorEstrategico: IndicatorResponse;
+  status:string, 
+  tipo:string,
+  result?:ResultRequest
 }
 
-export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
-  const { performance, tipo } = indicadorEstrategico;
+export function StrategicCard({ indicadorEstrategico, status, tipo,result  }: StrategicCardProps) {
 
   const formatValue = (value: number) => {
-    if (indicadorEstrategico.unidade === '%') {
+    if (indicadorEstrategico.unity === '%') {
       return `${value.toFixed(1)}%`;
-    } else if (indicadorEstrategico.unidade === 'R$') {
+    } else if (indicadorEstrategico.unity === 'R$') {
       return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -26,7 +29,7 @@ export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
   };
 
   const getStatusIcon = () => {
-    switch (performance.anual.status) {
+    switch (status) {
       case 'acima':
         return <TrendingUp className="h-4 w-4 text-green-600" />;
       case 'abaixo':
@@ -37,7 +40,7 @@ export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
   };
 
   const getStatusColor = () => {
-    switch (performance.anual.status) {
+    switch (status) {
       case 'acima':
         return 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800';
       case 'abaixo':
@@ -48,7 +51,7 @@ export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
   };
 
   const getStatusText = () => {
-    switch (performance.anual.status) {
+    switch (status) {
       case 'acima':
         return 'Acima da Meta';
       case 'abaixo':
@@ -68,7 +71,7 @@ export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
           {tipo === 'plano-contas' && (
             <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" title="Plano de Contas"></div>
           )}
-          <span className="line-clamp-2">{indicadorEstrategico.nome}</span>
+          <span className="line-clamp-2">{indicadorEstrategico.name}</span>
         </CardTitle>
         <div className="flex items-center gap-2">
           <span className={`text-xs px-2 py-1 rounded-full ${
@@ -90,71 +93,44 @@ export function StrategicCard({ indicadorEstrategico }: StrategicCardProps) {
           </div>
           
           <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Realizado:</span>
-              <span className="font-bold text-base">
-                {formatValue(performance.anual.totalRealizado)}
-              </span>
-            </div>
+            {result.carriedResult>0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Realizado:</span>
+                <span className="font-bold text-base">
+                  {formatValue(result?.carriedResult??0)}
+                </span>
+              </div>
+            )}
             
-            {performance.anual.totalMeta > 0 && (
+            
+            {result.budgetedResult > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm">Meta:</span>
                 <span className="font-medium text-sm">
-                  {formatValue(performance.anual.totalMeta)}
+                  {formatValue(result?.budgetedResult??0)}
                 </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Detalhes Mensais */}
-        {performance.mensal.length > 0 && (
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Calendar className="h-4 w-4" />
-              Performance Mensal
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div className="text-center p-2 bg-green-50 rounded dark:bg-green-900/20">
-                <p className="font-medium text-green-600">
-                  {performance.mensal.filter(p => p.status === 'acima').length}
-                </p>
-                <p className="text-muted-foreground">Acima</p>
-              </div>
-              <div className="text-center p-2 bg-blue-50 rounded dark:bg-blue-900/20">
-                <p className="font-medium text-blue-600">
-                  {performance.mensal.filter(p => p.status === 'dentro').length}
-                </p>
-                <p className="text-muted-foreground">Meta</p>
-              </div>
-              <div className="text-center p-2 bg-red-50 rounded dark:bg-red-900/20">
-                <p className="font-medium text-red-600">
-                  {performance.mensal.filter(p => p.status === 'abaixo').length}
-                </p>
-                <p className="text-muted-foreground">Abaixo</p>
-              </div>
-            </div>
-          </div>
-        )}
-
+      
         {/* Informações do Indicador */}
         <div className="space-y-1 text-xs text-muted-foreground mt-auto">
           <div className="flex justify-between">
             <span>Código:</span>
-            <span className="font-mono">{indicadorEstrategico.codigo}</span>
+            <span className="font-mono">{indicadorEstrategico.cod}</span>
           </div>
-          {indicadorEstrategico.unidade && (
+          {indicadorEstrategico.unity && (
             <div className="flex justify-between">
               <span>Unidade:</span>
-              <span>{indicadorEstrategico.unidade}</span>
+              <span>{indicadorEstrategico.unity}</span>
             </div>
           )}
-          {indicadorEstrategico.melhorQuando && (
+          {indicadorEstrategico.betterWhen && (
             <div className="flex justify-between">
               <span>Melhor quando:</span>
-              <span className="capitalize">{indicadorEstrategico.melhorQuando}</span>
+              <span className="capitalize">{indicadorEstrategico.betterWhen}</span>
             </div>
           )}
         </div>

@@ -26,13 +26,15 @@ public class UserIndicatorService {
 	IndicatorMapper indicatorMapper;
 	
 
-	public void  create(Long userId, IndicatorRequestDto dto) {
+	public void  create(String email, IndicatorRequestDto dto) {
+		
+		User user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("Erro ao buscar usuario"));
+		
+		Long userId = user.getId();
+		
 		if (userIndicatorRepository.existsByCodAndUserId(dto.cod(), userId)) {
 			throw new IllegalArgumentException("Código já existe para este usuário");
 		}
-		
-		User user = userRepository.findById(userId)
-				            .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 		
 		UserIndicator indicator = indicatorMapper.toUserEntity(dto, user);
 		UserIndicator saved = userIndicatorRepository.save(indicator);
@@ -40,8 +42,10 @@ public class UserIndicatorService {
 		indicatorMapper.toDto(saved);
 	}
 	
-	public List<IndicatorResponseDto> findByUserId(Long userId) {
-		return userIndicatorRepository.findByUserId(userId).stream()
+	public List<IndicatorResponseDto> findByUserId(String email) {
+		User user = userRepository.findByEmail(email).orElseThrow(()->new RuntimeException("Erro ao encontrar usuario"));
+		
+		return userIndicatorRepository.findByUserId(user.getId()).stream()
 				       .map(indicatorMapper::toDto)
 				       .collect(Collectors.toList());
 	}

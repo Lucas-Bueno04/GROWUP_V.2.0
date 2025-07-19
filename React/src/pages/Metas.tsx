@@ -44,127 +44,22 @@ const Metas = () => {
     planoContas: isLoadingPlanoContas
   });
 
-  // Calculate totals
-  const totalMetas = (metasIndicadores.data?.length || 0) + (metasIndicadoresEmpresa.data?.length || 0);
-  const indicadoresAtivos = indicadoresEmpresa.indicadoresProprios.data?.filter(ind => ind.ativo).length || 0;
-  const indicadoresPlanoContasCount = indicadoresPlanoContas.length || 0;
 
-  // Check for errors
-  const hasErrors = metasIndicadores.isError || metasIndicadoresEmpresa.isError || indicadoresEmpresa.indicadoresProprios.isError || empresasError;
 
-  // Calculate overall loading state
-  const isMainContentLoading = metasIndicadores.isLoading || metasIndicadoresEmpresa.isLoading || indicadoresEmpresa.isLoading;
-
-  const handleReload = () => {
-    window.location.reload();
-  };
-
-  // Show error for empresas loading
-  if (empresasError) {
-    return (
-      <div className="container mx-auto py-6">
-        <MetasPageHeader
-          totalMetas={totalMetas}
-          indicadoresAtivos={indicadoresAtivos}
-          indicadoresPlanoContasCount={indicadoresPlanoContasCount}
-          hasErrors={true}
-          onReload={handleReload}
-        />
-        <ErrorDisplay 
-          error={empresasError} 
-          title="Erro ao carregar empresas"
-          onRetry={handleReload}
-        />
-      </div>
-    );
-  }
-
-  // Show loading while companies are loading
-  if (isLoadingEmpresas) {
-    return (
-      <div className="container mx-auto py-6">
-        <MetasPageHeader
-          totalMetas={0}
-          indicadoresAtivos={0}
-          indicadoresPlanoContasCount={0}
-          hasErrors={false}
-          onReload={handleReload}
-        />
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-muted-foreground">Carregando empresas disponíveis...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show message if no companies available
-  if (empresasDisponiveis.length === 0) {
-    return (
-      <div className="container mx-auto py-6">
-        <MetasPageHeader
-          totalMetas={0}
-          indicadoresAtivos={0}
-          indicadoresPlanoContasCount={0}
-          hasErrors={false}
-          onReload={handleReload}
-        />
-        <div className="text-center py-8">
-          <p>Nenhuma empresa disponível para este usuário.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (hasErrors) {
-    return (
-      <div className="container mx-auto py-6">
-        <MetasPageHeader
-          totalMetas={totalMetas}
-          indicadoresAtivos={indicadoresAtivos}
-          indicadoresPlanoContasCount={indicadoresPlanoContasCount}
-          hasErrors={true}
-          onReload={handleReload}
-        />
-        <MetasErrorState onReload={handleReload} />
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-6">
       <MetasPageHeader
-        totalMetas={totalMetas}
-        indicadoresAtivos={indicadoresAtivos}
-        indicadoresPlanoContasCount={indicadoresPlanoContasCount}
         hasErrors={false}
-        onReload={handleReload}
       />
       
       <div className="space-y-6">
-        <MetasControls
-          empresaId={empresaId}
-          onEmpresaChange={setEmpresaId}
-          onRefresh={handleReload}
+        <MetasSummaryCards
+            indicadoresProprios={0}
+            IndicadoresPlanodeContas={0}
         />
-
-        <MetasEmpresaHeader empresaId={empresaId} />
-
-        {empresaId && (
-          <MetasSummaryCards
-            totalMetas={totalMetas}
-            indicadoresAtivos={indicadoresAtivos}
-            metasIndicadoresCount={metasIndicadores.data?.length || 0}
-            indicadoresPlanoContasCount={indicadoresPlanoContasCount}
-          />
-        )}
-
+       
         <MetasMainContent
-          empresaId={empresaId}
-          metasIndicadores={metasIndicadores.data || []}
-          metasIndicadoresEmpresa={metasIndicadoresEmpresa.data || []}
-          indicadoresEmpresa={indicadoresEmpresa.indicadoresProprios.data || []}
-          isLoading={isMainContentLoading}
         />
       </div>
     </div>
