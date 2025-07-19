@@ -31,7 +31,6 @@ public class JwtTokenService {
 			return JWT.create()
 					       .withIssuer(ISSUER)
 					       .withIssuedAt(creationDate())
-					       .withExpiresAt(expirationDate())
 					       .withSubject(user.getUsername())
 					       .withClaim("roles", roles)
 					       .sign(algorithm);
@@ -60,10 +59,10 @@ public class JwtTokenService {
 					                       .withIssuer(ISSUER)
 					                       .build();
 			
-			DecodedJWT decodedJWT = verifier.verify(token);
+			verifier.verify(token);
 			
+			return true;
 			// Verifica data de expiração explicitamente (opcional, mas seguro)
-			return decodedJWT.getExpiresAt().toInstant().isAfter(Instant.now());
 		} catch (JWTVerificationException e) {
 			return false;
 		}
