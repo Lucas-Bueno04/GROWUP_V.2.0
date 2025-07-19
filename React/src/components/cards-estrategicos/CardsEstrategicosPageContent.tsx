@@ -8,44 +8,30 @@ import { ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import { JwtService } from "@/components/auth/GetAuthParams";
 import { IndicatorResponse } from '../interfaces/IndicadorResponse';
-import { ResultRequest } from '../interfaces/ResultRequest';
-import { FormulaRequest } from '../interfaces/FormulaRequest';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
 const jwtService = new JwtService();
 
 const getAllAdminIndicators = async (token: string): Promise<IndicatorResponse[]> => {
-    const response = await axios.get(`${API_KEY}/indicator/admin-indicator`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  };
+  const response = await axios.get(`${API_KEY}/indicator/admin-indicator`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
 
 const getAllUserIndicators = async (email: string, token: string): Promise<IndicatorResponse[]> => {
-    const response = await axios.get(`${API_KEY}/indicator/user-indicator/by-user-email/${email}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  };
+  const response = await axios.get(`${API_KEY}/indicator/user-indicator/by-user-email/${email}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
 
 const getBudgetNameById = async(id:number, token:string):Promise<string>=>{
-    const response = await axios.get(`${API_KEY}/budget/by-id/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  }
-
-const getEvaluatedData = async (
-    id: number,
-    token: string,
-    data:FormulaRequest
-  ):Promise<ResultRequest> => {
-    const response = await axios.post(`${API_KEY}/analist/formula/evaluate/${id}`, data, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
-  };
-
+  const response = await axios.get(`${API_KEY}/budget/by-id/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
 
 export function CardsEstrategicosPageContent() {
   const { id } = useParams();
@@ -62,8 +48,7 @@ export function CardsEstrategicosPageContent() {
   const [indicadoresPessoais, setIndicadoresPessoais] = useState<IndicatorResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [budgetName, setBudgetName] = useState<string | null>(null);
-  const [meses, setMeses] = useState([]);
-  
+  const [meses, setMeses] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,7 +68,6 @@ export function CardsEstrategicosPageContent() {
       const email = await jwtService.getClaim("sub") as string || "";
       const dataAdmin = await getAllAdminIndicators(token);
       const dataPessoal = await getAllUserIndicators(email, token);
-      console.log("dados:", dataAdmin, dataPessoal);
       setIndicadoresPessoais(dataPessoal);
       setIndicadoresPlanoDeContas(dataAdmin);
     } catch (error) {
@@ -91,13 +75,13 @@ export function CardsEstrategicosPageContent() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(()=>{
-     if (id) {
-    loadCards();
-  }
-  },[id])
+  useEffect(() => {
+    if (id) {
+      loadCards();
+    }
+  }, [id]);
 
   return (
     <div className="space-y-6">
@@ -105,22 +89,21 @@ export function CardsEstrategicosPageContent() {
         <ArrowLeft className="w-4 h-4" /> Retornar
       </Button>
 
-      <CardsEstrategicosEmpresaHeader budgetName={budgetName} setMeses = {setMeses} />
+      <CardsEstrategicosEmpresaHeader budgetName={budgetName} setMeses={setMeses} />
 
       <CardsEstrategicosStats stats={stats} />
 
-      
       {loading ? (
-      <p>Carregando indicadores...</p>
-    ) : (
-      <CardsEstrategicosContent
-        indicadoresPlanoDeContas={indicadoresPlanoDeContas}
-        indicadoresPessoais={indicadoresPessoais}
-        id={Number(id)}
-        meses={meses}
-      />
-    )}
-
+        <p>Carregando indicadores...</p>
+      ) : (
+        <CardsEstrategicosContent
+          indicadoresPlanoDeContas={indicadoresPlanoDeContas}
+          indicadoresPessoais={indicadoresPessoais}
+          id={Number(id)}
+          meses={meses}
+          setStats={setStats} // Passa a função para atualizar stats
+        />
+      )}
     </div>
   );
 }

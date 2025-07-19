@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, BarChart3, Target, Receipt, Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +7,18 @@ import { BudgetAnalysisData } from '@/hooks/analise-orcamentaria';
 import { getVarianceInterpretation } from './utils/varianceUtils';
 
 interface ExecutiveSummaryCardsProps {
-  data: BudgetAnalysisData;
-  isLoading?: boolean;
-  isCumulative?: boolean;
-  selectedMonth?: number;
+  receitaOrcada:number,
+  receitaRealizada:number, 
+  ebitdaOrcado:number,
+  ebidtaRealizado:number,
+  mes:string
 }
 
-export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedMonth }: ExecutiveSummaryCardsProps) {
+export function ExecutiveSummaryCards({ receitaRealizada, receitaOrcada, ebidtaRealizado, ebitdaOrcado, mes}: ExecutiveSummaryCardsProps) {
+  
+  const [varianciaReceita, setVarianciaReceita] = useState(0);
+  const [varianciaEbidta, setVarianciaEbidta] = useState(0);
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -27,89 +32,22 @@ export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedM
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
   };
 
-  const getMonthName = (month: number) => {
-    const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-    return months[month - 1];
-  };
+  const variancia = ((receitaRealizada-receitaOrcada)/receitaOrcada)*100
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i}>
-            <CardContent className="p-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  // Usar dados cumulativos se disponíveis e solicitados
-  const receitaOrcada = isCumulative && data.receitaLiquidaOrcadaCumulativa !== undefined 
-    ? data.receitaLiquidaOrcadaCumulativa 
-    : data.receitaLiquidaOrcada;
-    
-  const receitaRealizada = isCumulative && data.receitaLiquidaRealizadaCumulativa !== undefined 
-    ? data.receitaLiquidaRealizadaCumulativa 
-    : data.receitaLiquidaRealizada;
-    
-  const ebitdaOrcado = isCumulative && data.ebitdaOrcadoCumulativo !== undefined 
-    ? data.ebitdaOrcadoCumulativo 
-    : data.ebitdaOrcado;
-    
-  const ebitdaRealizado = isCumulative && data.ebitdaRealizadoCumulativo !== undefined 
-    ? data.ebitdaRealizadoCumulativo 
-    : data.ebitdaRealizado;
-
-  const varianciaPercentual = isCumulative && data.varianciaPercentualCumulativa !== undefined 
-    ? data.varianciaPercentualCumulativa 
-    : data.varianciaPercentual;
-
-  const status = isCumulative && data.statusCumulativo !== undefined 
-    ? data.statusCumulativo 
-    : data.status;
-
-  const receitaVariancia = receitaRealizada - receitaOrcada;
-  
-  // Use the correct variance interpretation for revenue (positive sign)
-  const { status: receitaStatus } = getVarianceInterpretation(
-    receitaVariancia, 
-    receitaOrcada, 
-    '+'
-  );
-
-  // Calculate EBITDA variance correctly
-  const ebitdaVariancia = ebitdaRealizado - ebitdaOrcado;
-  const ebitdaVarianciaPercentual = ebitdaOrcado > 0 ? (ebitdaVariancia / ebitdaOrcado)  * 100 : 0;
-  const { status: ebitdaStatus } = getVarianceInterpretation(
-    ebitdaVariancia,
-    ebitdaOrcado,
-    '+'
-  );
-
-  const periodLabel = isCumulative && selectedMonth 
-    ? `até ${getMonthName(selectedMonth)}` 
-    : '';
+  useEffect(()=>{
+    const varianciaReceita = ((receitaRealizada-receitaOrcada)/receitaOrcada)*100
+    const varianciaEbidta = ((ebidtaRealizado-ebitdaOrcado)/ebitdaOrcado)*100
+    setVarianciaReceita(varianciaReceita);
+    setVarianciaEbidta(varianciaEbidta);
+  },[mes,receitaOrcada, receitaRealizada, ebitdaOrcado, ebidtaRealizado])
 
   return (
     <div className="space-y-4">
-      {/* Indicador do período quando cumulativo */}
-      {isCumulative && selectedMonth && (
         <div className="flex justify-center">
           <Badge variant="outline" className="text-sm">
-            📊 Análise Cumulativa até {getMonthName(selectedMonth)}
+            📊 Análise Cumulativa até {mes}
           </Badge>
         </div>
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
@@ -117,7 +55,7 @@ export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedM
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Receita Líquida Orçada {periodLabel}
+                  Receita Líquida Orçada 
                 </p>
                 <h3 className="text-2xl font-bold">{formatCurrency(receitaOrcada)}</h3>
               </div>
@@ -131,7 +69,7 @@ export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedM
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Receita Líquida Realizada {periodLabel}
+                  Receita Líquida Realizada 
                 </p>
                 <h3 className="text-2xl font-bold">{formatCurrency(receitaRealizada)}</h3>
               </div>
@@ -145,19 +83,19 @@ export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedM
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Variação Receita Líquida {periodLabel}
+                  Variação Receita Líquida 
                 </p>
-                <h3 className="text-2xl font-bold">{formatCurrency(receitaVariancia)}</h3>
+                <h3 className="text-2xl font-bold">{formatCurrency(receitaRealizada-receitaOrcada)}</h3>
                 <p className={`text-sm ${
-                  receitaStatus === 'positive' ? 'text-green-600' : 
-                  receitaStatus === 'negative' ? 'text-red-600' : 'text-gray-600'
+                  receitaRealizada-receitaOrcada>0 ? 'text-green-600' : 
+                  receitaRealizada-receitaOrcada<0 ? 'text-red-600' : 'text-gray-600'
                 }`}>
-                  {formatPercentage(varianciaPercentual)}
+                  {formatPercentage(varianciaReceita)}
                 </p>
               </div>
-              {receitaStatus === 'positive' ? (
+              {varianciaReceita>0?(
                 <TrendingUp className="h-8 w-8 text-green-600" />
-              ) : receitaStatus === 'negative' ? (
+              ) : varianciaReceita<0 ? (
                 <TrendingDown className="h-8 w-8 text-red-600" />
               ) : (
                 <BarChart3 className="h-8 w-8 text-gray-600" />
@@ -171,17 +109,17 @@ export function ExecutiveSummaryCards({ data, isLoading, isCumulative, selectedM
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  EBITDA Realizado {periodLabel}
+                  EBITDA Realizado 
                 </p>
-                <h3 className="text-2xl font-bold">{formatCurrency(ebitdaRealizado)}</h3>
+                <h3 className="text-2xl font-bold">{formatCurrency(ebidtaRealizado)}</h3>
                 <p className="text-sm text-muted-foreground">
                   Orçado: {formatCurrency(ebitdaOrcado)}
                 </p>
                 <p className={`text-xs ${
-                  ebitdaStatus === 'positive' ? 'text-green-600' : 
-                  ebitdaStatus === 'negative' ? 'text-red-600' : 'text-gray-600'
+                  ebidtaRealizado-ebitdaOrcado>0? 'text-green-600' : 
+                  ebidtaRealizado-ebitdaOrcado<0? 'text-red-600' : 'text-gray-600'
                 }`}>
-                  {formatPercentage(ebitdaVarianciaPercentual)}
+                  {formatPercentage(varianciaEbidta)}
                 </p>
               </div>
               <Calculator className="h-8 w-8 text-purple-600" />

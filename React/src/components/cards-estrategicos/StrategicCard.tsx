@@ -9,10 +9,12 @@ interface StrategicCardProps {
   indicadorEstrategico: IndicatorResponse;
   status:string, 
   tipo:string,
-  result?:ResultRequest
+  result:ResultRequest
 }
 
 export function StrategicCard({ indicadorEstrategico, status, tipo,result  }: StrategicCardProps) {
+
+  console.log(result);
 
   const formatValue = (value: number) => {
     if (indicadorEstrategico.unity === '%') {
@@ -93,24 +95,20 @@ export function StrategicCard({ indicadorEstrategico, status, tipo,result  }: St
           </div>
           
           <div className="space-y-2">
-            {result.carriedResult>0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm">Realizado:</span>
                 <span className="font-bold text-base">
-                  {formatValue(result?.carriedResult??0)}
+                  {formatValue(result.carriedResult)}
                 </span>
               </div>
-            )}
             
             
-            {result.budgetedResult > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-sm">Meta:</span>
                 <span className="font-medium text-sm">
-                  {formatValue(result?.budgetedResult??0)}
+                  {formatValue(result.budgetedResult)}
                 </span>
               </div>
-            )}
           </div>
         </div>
 

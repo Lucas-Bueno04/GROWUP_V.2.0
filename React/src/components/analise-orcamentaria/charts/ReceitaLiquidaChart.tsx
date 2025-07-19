@@ -1,29 +1,110 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import { BarChart3 } from "lucide-react";
-import { BudgetAnalysisData } from '@/hooks/analise-orcamentaria';
+import { FormulaRequest } from '@/components/interfaces/FormulaRequest';
+import { ResultRequest } from '@/components/interfaces/ResultRequest';
+import axios from 'axios';
+import { JwtService } from "@/components/auth/GetAuthParams";
 
-interface ReceitaLiquidaChartProps {
-  data: BudgetAnalysisData;
-}
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
-export function ReceitaLiquidaChart({ data }: ReceitaLiquidaChartProps) {
+const getEvaluatedData = async (
+  budgetId: number,
+  token: string,
+  data: FormulaRequest
+): Promise<ResultRequest> => {
+  const response = await axios.post(
+    `${API_KEY}/analist/formula/evaluate/${budgetId}`,
+    data,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
+export function ReceitaLiquidaChart({ budgetId }) {
+
+  console.log(budgetId)
+  const [receitaLiquidaChartData, setReceitaLiquidaChartData] = useState([]);
+
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { 
-      style: 'currency', 
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
       currency: 'BRL',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 0
     }).format(value);
   };
 
-  const receitaLiquidaChartData = (data.dadosMensais || []).map(item => ({
-    mes: item.mesNome.substring(0, 3),
-    receitaLiquidaOrcada: item.receitaLiquidaOrcada,
-    receitaLiquidaRealizada: item.receitaLiquidaRealizada,
-    variancia: item.receitaLiquidaRealizada - item.receitaLiquidaOrcada
-  }));
+  const getReceitaLiquida = async (month: string) => {
+    const receitaFormula = "G_1-G_2";
+    const token = await jwtService.getToken();
+    const receitaRequest: FormulaRequest = {
+      formula: receitaFormula,
+      months: [month]
+    };
+    const receitaResponse = await getEvaluatedData(Number(budgetId), token, receitaRequest);
+    console.log('Mês:', month, 'Resposta:', receitaResponse);
+    return {
+      month,
+      orcado: receitaResponse.budgetedResult,
+      realizado: receitaResponse.carriedResult
+    };
+  };
+
+  const monthLabels = [
+    "JANEIRO",
+    "FEVEREIRO",
+    "MARCO",
+    "ABRIL",
+    "MAIO",
+    "JUNHO",
+    "JULHO",
+    "AGOSTO",
+    "SETEMBRO",
+    "OUTUBRO",
+    "NOVEMBRO",
+    "DEZEMBRO"
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const results = [];
+      for (let i = 0; i < 12; i++) {
+        try {
+          const monthName = monthLabels[i];
+          const data = await getReceitaLiquida(monthName);
+          results.push({
+            mes: monthName,
+            receitaLiquidaOrcada: data.orcado,
+            receitaLiquidaRealizada: data.realizado
+          });
+        } catch (error) {
+          console.error(`Erro ao buscar dados do mês ${monthLabels[i]}:`, error);
+        }
+      }
+      setReceitaLiquidaChartData(results);
+    };
+
+    fetchData();
+  }, [budgetId]);
 
   return (
     <Card>

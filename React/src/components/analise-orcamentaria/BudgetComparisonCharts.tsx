@@ -10,19 +10,17 @@ import { ChartLoadingState } from './charts/ChartLoadingState';
 import { ChartEmptyState } from './charts/ChartEmptyState';
 
 interface BudgetComparisonChartsProps {
-  data: BudgetAnalysisData;
+  budgetId:number
   isLoading?: boolean;
 }
 
-export function BudgetComparisonCharts({ data, isLoading }: BudgetComparisonChartsProps) {
+export function BudgetComparisonCharts({ budgetId, isLoading }: BudgetComparisonChartsProps) {
   if (isLoading) {
     return <ChartLoadingState />;
   }
 
-  // Ensure data exists and has the required properties
-  if (!data || !data.dadosMensais || !data.dadosHierarquicos) {
-    return <ChartEmptyState />;
-  }
+
+ 
 
   return (
     <div className="mb-6">
@@ -43,15 +41,15 @@ export function BudgetComparisonCharts({ data, isLoading }: BudgetComparisonChar
         </TabsList>
         
         <TabsContent value="receita-liquida">
-          <ReceitaLiquidaChart data={data} />
+          <ReceitaLiquidaChart budgetId={budgetId}  />
         </TabsContent>
         
         <TabsContent value="trend">
-          <TrendChart data={data} />
+          <TrendChart  />
         </TabsContent>
         
         <TabsContent value="grupos">
-          <GroupsVariationChart data={data} />
+          {/*<GroupsVariationChart />*/}
         </TabsContent>
       </Tabs>
     </div>

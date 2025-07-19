@@ -7,21 +7,9 @@ import { TrendChartSelectors } from './components/TrendChartSelectors';
 import { TrendChartDisplay } from './components/TrendChartDisplay';
 import { TrendChartEmptyState } from './components/TrendChartEmptyState';
 
-interface TrendChartProps {
-  data: BudgetAnalysisData;
-}
 
-export function TrendChart({ data }: TrendChartProps) {
-  const {
-    selectedGroup1,
-    selectedGroup2,
-    setSelectedGroup1,
-    setSelectedGroup2,
-    availableOptions,
-    trendChartData,
-    getLineColor,
-    getLineLabel
-  } = useTrendChartData(data);
+
+export function TrendChart() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { 

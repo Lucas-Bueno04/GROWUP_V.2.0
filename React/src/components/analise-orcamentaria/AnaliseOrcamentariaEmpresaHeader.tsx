@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { CompanyMedal } from '@/components/empresa/CompanyMedal';
 import { BadgeProgressIndicator } from './BadgeProgressIndicator';
@@ -7,33 +6,56 @@ import { useCompanyBadge } from '@/hooks/useCompanyBadge';
 import { useEmpresasOrcamento } from '@/hooks/analise-orcamentaria/useEmpresasOrcamento';
 import { useOrcamentoEmpresasPorUsuario } from '@/hooks/orcamento-empresas';
 import { useAuth } from '@/hooks/useAuth';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AnaliseOrcamentariaEmpresaHeaderProps {
-  empresaId: string | null;
+  budgetName: string | null;
   selectedYear: number;
+  setMeses:(meses: string[]) => void;
 }
 
+const MESES = [
+  "TODOS",
+  "JANEIRO",
+  "FEVEREIRO",
+  "MARCO",
+  "ABRIL",
+  "MAIO",
+  "JUNHO",
+  "JULHO",
+  "AGOSTO",
+  "SETEMBRO",
+  "OUTUBRO",
+  "NOVEMBRO",
+  "DEZEMBRO"
+];
+
 export function AnaliseOrcamentariaEmpresaHeader({
-  empresaId,
-  selectedYear
+  budgetName,
+  selectedYear,
+  setMeses, 
 }: AnaliseOrcamentariaEmpresaHeaderProps) {
-  const { user } = useAuth();
-  const { data: empresasOrcamento = [] } = useEmpresasOrcamento();
-  const { data: orcamentosUsuario = [] } = useOrcamentoEmpresasPorUsuario();
-  const { data: badgeData } = useCompanyBadge(empresaId);
+  const [periodo, setPeriodo] = useState("TODOS");
 
-  if (!empresaId) return null;
-
-  // Get company name based on user role using correct property names
-  const getCompanyName = () => {
-    if (user?.role === 'mentor') {
-      const empresa = empresasOrcamento.find(e => e.id === empresaId);
-      return empresa ? `${empresa.nomeFantasia || empresa.nome} (${empresa.ano})` : 'Empresa não encontrada';
-    } else {
-      const orcamento = orcamentosUsuario.find(o => o.empresa_id === empresaId);
-      return orcamento?.empresa ? `${orcamento.empresa.nome_fantasia || orcamento.empresa.nome} (${orcamento.ano})` : 'Empresa não encontrada';
+  function getMesesSelecionados(mesSelecionado: string): string[] {
+    if (mesSelecionado === "TODOS") {
+      return MESES.slice(1); // Ignora "TODOS"
     }
-  };
+
+    const index = MESES.indexOf(mesSelecionado);
+    if (index === -1) return [];
+
+    return MESES.slice(1, index + 1); // Do primeiro mês até o selecionado
+  }
+
+  useEffect(() => {
+      const mesesSelecionados = getMesesSelecionados(periodo);
+      console.log("Meses selecionados:", mesesSelecionados);
+      setMeses(mesesSelecionados)
+  
+      // Aqui você pode usar os mesesSelecionados para filtrar dados, fazer requisições, etc.
+  }, [periodo]);
+  
 
   return (
     <Card>
@@ -41,39 +63,30 @@ export function AnaliseOrcamentariaEmpresaHeader({
         {/* Company Info with Badge - Unified Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex items-center gap-6">
-            {/* Company Badge */}
-            {badgeData?.classification && (
-              <div className="flex justify-center lg:justify-start">
-                <CompanyMedal 
-                  classification={badgeData.classification} 
-                  currentRevenue={badgeData.currentRevenue}
-                  size="sm" 
-                  showProgress={false}
-                />
-              </div>
-            )}
-            
+           
             {/* Company Info */}
             <div>
-              <h2 className="text-xl font-semibold">{getCompanyName()}</h2>
+              <h2 className="text-xl font-semibold">{budgetName}</h2>
               <p className="text-sm text-muted-foreground">Análise orçamentária da empresa</p>
             </div>
-          </div>
-
-          {/* Badge Progress */}
-          <div className="min-w-0 lg:max-w-xs">
-            {badgeData && (
-              <BadgeProgressIndicator
-                currentRevenue={badgeData.currentRevenue}
-                nextThreshold={badgeData.nextThreshold}
-                nextLevel={badgeData.nextLevel}
-              />
-            )}
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
+         <label className="text-sm font-medium text-muted-foreground">Período</label>
+            <Select value={periodo} onValueChange={setPeriodo}>
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MESES.map(mes => (
+                      <SelectItem key={mes} value={mes}>
+                        {mes}
+                      </SelectItem>
+                  ))}
+                </SelectContent>
+          </Select>
         {/* Additional info */}
         <div className="text-xs text-muted-foreground">
           Dados de {selectedYear} • Análise comparativa orçado vs realizado
