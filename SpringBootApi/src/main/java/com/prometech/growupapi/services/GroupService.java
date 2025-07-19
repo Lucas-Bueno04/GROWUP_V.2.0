@@ -53,6 +53,10 @@ public class GroupService {
 		
 	}
 	
+	public Group getById (Long id){
+		return groupRepository.getReferenceById(id);
+	}
+	
 	public Group updateGroup(Long id, Group updateGroup){
 		Group existing = groupRepository.findById(id).orElseThrow(()-> new RuntimeException("Grupo não encontrado"));
 		

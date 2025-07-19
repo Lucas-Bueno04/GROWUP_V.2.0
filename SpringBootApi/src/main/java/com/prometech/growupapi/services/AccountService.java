@@ -45,4 +45,8 @@ public class AccountService {
 	public void deleteAccountById(Long id){
 		accountRepository.deleteById(id);
 	}
+	
+	public Account getById(Long id){
+		return accountRepository.getReferenceById(id);
+	}
 }

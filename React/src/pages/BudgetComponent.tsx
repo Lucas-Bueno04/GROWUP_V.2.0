@@ -53,18 +53,18 @@ export default function BudgetEditor() {
   }, [id]);
 
   const getValue = (accountId: number, month: string, type: string) => {
-    const m = data?.months.find(m => m.month === month);
-    const val = m?.values.find(v => v.accountId === accountId && v.valueType === type);
+    const m = (data?.months || []).find(m => m.month === month);
+    const val = (m?.values || []).find(v => v.accountId === accountId && v.valueType === type);
     return val?.value ?? '';
   };
 
   const handleChange = (accountId: number, month: string, value: string, type: string) => {
     if (!data) return;
     const newData = structuredClone(data);
-    const m = newData.months.find(m => m.month === month);
+    const m = (newData.months || []).find(m => m.month === month);
     if (!m) return;
 
-    const existing = m.values.find(v => v.accountId === accountId && v.valueType === type);
+    const existing = (m.values || []).find(v => v.accountId === accountId && v.valueType === type);
     if (existing) {
       existing.value = parseFloat(value);
     } else {
@@ -80,16 +80,16 @@ export default function BudgetEditor() {
     if (idx === -1) return;
 
     const newData = structuredClone(data);
-    const source = newData.months.find(m => m.month === month);
+    const source = (newData.months || []).find(m => m.month === month);
     if (!source) return;
 
     for (let i = idx + 1; i < months.length; i++) {
-      const target = newData.months.find(m => m.month === months[i]);
+      const target = (newData.months || []).find(m => m.month === months[i]);
       if (!target) continue;
 
-      source.values.forEach(src => {
+      (source.values || []).forEach(src => {
         if (src.valueType !== type) return;
-        const dest = target.values.find(v => v.accountId === src.accountId && v.valueType === type);
+        const dest = (target.values || []).find(v => v.accountId === src.accountId && v.valueType === type);
         if (dest) {
           dest.value = src.value;
         } else {

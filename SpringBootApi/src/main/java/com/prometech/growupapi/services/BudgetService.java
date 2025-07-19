@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class BudgetService {
@@ -28,8 +29,9 @@ public class BudgetService {
 	private BudgetMapperService budgetMapperService;
 	
 	public BudgetDto getBudgetById(Long id){
-		Budget budget = budgetRepository.findById(id)
+		Budget budget =  budgetRepository.findById(id)
 				                .orElseThrow(() -> new RuntimeException("Erro ao buscar orçamento"));
+		
 		return BudgetMapperService.toDto(budget);
 	}
 	
@@ -123,5 +125,14 @@ public class BudgetService {
 			throw new RuntimeException("Orçamento não encontrado");
 		}
 		budgetRepository.deleteById(id);
+	}
+
+	public List<MonthBudget> getFilteredMonthBudgets(Long budgetId, List<Month> months) {
+		Budget budget = budgetRepository.findById(budgetId)
+				                .orElseThrow(() -> new RuntimeException("Budget not found"));
+		
+		return budget.getMonthBudgets().stream()
+				       .filter(mb -> months.contains(mb.getMonth()))
+				       .collect(Collectors.toList());
 	}
 }

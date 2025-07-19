@@ -1,14 +1,18 @@
 package com.prometech.growupapi.controllers;
 
-import com.prometech.growupapi.dto.BudgetDto;
-import com.prometech.growupapi.dto.BudgetRequestDto;
+import com.prometech.growupapi.domain.*;
+import com.prometech.growupapi.dto.*;
+
 import com.prometech.growupapi.services.BudgetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/budget")
@@ -16,6 +20,8 @@ public class BudgetController {
 
 	@Autowired
 	private BudgetService budgetService;
+	
+	
 	
 	@PostMapping("/create")
 	public ResponseEntity<Void> createBudget(@RequestBody BudgetRequestDto dto){
@@ -57,4 +63,12 @@ public class BudgetController {
 		budgetService.updateBudget(budgetDto);
 		return  ResponseEntity.status(HttpStatus.OK).build();
 	}
+	
+	@GetMapping("/filter-months")
+	public  ResponseEntity<List<MonthBudget>> filterBudgetMonths(@RequestBody BudgetMonthFilteredRequest budgetMonthFilteredRequest){
+		List<MonthBudget> filtered = budgetService.getFilteredMonthBudgets(budgetMonthFilteredRequest.budgetId(),budgetMonthFilteredRequest.months());
+		return ResponseEntity.ok(filtered);
+	}
+
+	
 }
