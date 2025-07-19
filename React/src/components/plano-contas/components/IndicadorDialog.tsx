@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { OrcamentoIndicador } from '@/types/plano-contas.types';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { IndicatorRequest } from '@/components/interfaces/IndicadorRequest'; 
+import { IndicatorResponse } from '@/components/interfaces/IndicadorResponse'; 
 
 interface IndicadorDialogProps {
-  indicador?: OrcamentoIndicador;
-  onSave: () => void;
+  indicador?: IndicatorResponse;
+  onSave: (data: IndicatorRequest) => void | Promise<void>;
   onCancel?: () => void;
 }
 
@@ -27,19 +26,17 @@ export function IndicadorDialog({ indicador, onSave, onCancel }: IndicadorDialog
     formula: '',
     unidade: '%',
     melhor_quando: 'maior' as 'maior' | 'menor',
-    ordem: 1,
   });
 
   useEffect(() => {
     if (indicador) {
       setFormData({
-        codigo: indicador.codigo,
-        nome: indicador.nome,
-        descricao: indicador.descricao || '',
+        codigo: indicador.cod,
+        nome: indicador.name,
+        descricao: indicador.description || '',
         formula: indicador.formula,
-        unidade: indicador.unidade || '%',
-        melhor_quando: (indicador.melhor_quando as 'maior' | 'menor') || 'maior',
-        ordem: indicador.ordem,
+        unidade: indicador.unity || '%',
+        melhor_quando: (indicador.betterWhen as 'maior' | 'menor') || 'maior',
       });
       setOpen(true);
     }
@@ -50,39 +47,18 @@ export function IndicadorDialog({ indicador, onSave, onCancel }: IndicadorDialog
     setLoading(true);
 
     try {
-      const dataToSave = {
-        codigo: formData.codigo,
-        nome: formData.nome,
-        descricao: formData.descricao || null,
+      const dataToSave: IndicatorRequest = {
+        cod: formData.codigo,
+        name: formData.nome,
+        description: formData.descricao || null,
         formula: formData.formula,
-        unidade: formData.unidade,
-        melhor_quando: formData.melhor_quando,
-        ordem: formData.ordem,
-        updated_at: new Date().toISOString(),
+        unity: formData.unidade,
+        betterWhen: formData.melhor_quando,
       };
 
-      if (indicador) {
-        // Atualizar indicador existente
-        const { error } = await supabase
-          .from('orcamento_indicadores')
-          .update(dataToSave)
-          .eq('id', indicador.id);
-
-        if (error) throw error;
-        toast.success('Indicador atualizado com sucesso!');
-      } else {
-        // Criar novo indicador
-        const { error } = await supabase
-          .from('orcamento_indicadores')
-          .insert([dataToSave]);
-
-        if (error) throw error;
-        toast.success('Indicador criado com sucesso!');
-      }
-
+      await onSave(dataToSave);
       setOpen(false);
-      onSave();
-      
+
       // Reset form for new indicators
       if (!indicador) {
         setFormData({
@@ -92,7 +68,6 @@ export function IndicadorDialog({ indicador, onSave, onCancel }: IndicadorDialog
           formula: '',
           unidade: '%',
           melhor_quando: 'maior',
-          ordem: 1,
         });
       }
     } catch (error) {
@@ -137,18 +112,6 @@ export function IndicadorDialog({ indicador, onSave, onCancel }: IndicadorDialog
                 value={formData.codigo}
                 onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value }))}
                 placeholder="Ex: IND01"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="ordem">Ordem *</Label>
-              <Input
-                id="ordem"
-                type="number"
-                value={formData.ordem}
-                onChange={(e) => setFormData(prev => ({ ...prev, ordem: parseInt(e.target.value) || 1 }))}
-                min="1"
                 required
               />
             </div>

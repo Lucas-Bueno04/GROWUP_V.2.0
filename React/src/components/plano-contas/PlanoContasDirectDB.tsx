@@ -67,11 +67,7 @@ export function PlanoContasDirectDB() {
         </TabsContent>
 
         <TabsContent value="indicadores" className="mt-6">
-          <PlanoContasIndicadores 
-            indicadores={indicadores}
-            grupos={grupos}
-            onDataChange={handleDataChange}
-            isLoading={loadingIndicadores}
+          <PlanoContasIndicadores
           />
         </TabsContent>
       </Tabs>

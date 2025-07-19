@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -10,48 +10,85 @@ import { IndicadoresTable } from './components/IndicadoresTable';
 import { LoadingState, ErrorState } from './components/IndicadoresStates';
 import { useIndicadorReplication } from '@/hooks/plano-contas/useIndicadorReplication';
 import { useOrcamentoIndicadores } from '@/hooks/plano-contas/useOrcamentoIndicadores';
+import { IndicatorRequest } from '../interfaces/IndicadorRequest'; 
+import { IndicatorResponse } from '../interfaces/IndicadorResponse';
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { toast } from '@/components/ui/use-toast';
+import axios from 'axios';
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
-interface PlanoContasIndicadoresProps {
-  indicadores: OrcamentoIndicador[];
-  grupos: OrcamentoGrupo[];
-  onDataChange: () => void;
-  isLoading?: boolean;
+
+const createIndicador = async(data:IndicatorRequest, token:string):Promise<void>=>{
+  const response = await axios.post(`${API_KEY}/indicator/admin-indicator/create`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
 }
 
-export function PlanoContasIndicadores({ indicadores, grupos, onDataChange, isLoading = false }: PlanoContasIndicadoresProps) {
+const getAllAdminIndicators = async(token:string):Promise<IndicatorResponse[]>=>{
+  const response = await axios.get(`${API_KEY}/indicator/admin-indicator`,{
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return response.data
+}
+
+const deleteById = async (id:number, token:string):Promise<void>=>{
+  const response = await axios.delete(`${API_KEY}/indicator/admin-indicator/delete/by-id/${id}`,{
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+
+export function PlanoContasIndicadores() {
   const [loading] = useState(false);
   const [error] = useState<string | null>(null);
-  const { replicarIndicadoresParaTodos, loading: replicating } = useIndicadorReplication();
-  const { invalidateAllCaches } = useOrcamentoIndicadores();
+  const [indicadores, setIndicadores] = useState<IndicatorResponse[]>([]);
 
-  const handleReplicar = async () => {
-    console.log('[PLANO CONTAS INDICADORES] Iniciando replicação');
-    
-    const success = await replicarIndicadoresParaTodos();
-    if (success) {
-      console.log('[PLANO CONTAS INDICADORES] Replicação bem-sucedida, atualizando dados');
+  const fetchData = async()=>{
+    const token = await jwtService.getToken();
       
-      // Forçar invalidação de caches e reload dos dados
-      invalidateAllCaches();
-      onDataChange();
-      
-      // Aguardar um pouco e forçar reload da página para garantir sincronização
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+    const indicadoresList = await getAllAdminIndicators(token);
+
+    setIndicadores(indicadoresList)
+  };
+  
+  useEffect(()=>{
+    fetchData();
+  },[])
+
+  const handleCreate = async(data:IndicatorRequest)=>{
+    try{
+      const token = await jwtService.getToken();
+      await createIndicador(data, token);
+      toast({ title: "Indicador", description: "Indicador criado com sucesso" });
+      fetchData()
+    }catch(error){
+      console.log("erro:", error);
+      toast({ title: "Indicador", description: "Erro ao criar indicador" });
     }
-  };
+  }
 
-  const handleSaveIndicador = () => {
-    console.log('[PLANO CONTAS INDICADORES] Indicador salvo, forçando atualização');
-    
-    // Invalidar caches e forçar reload
-    invalidateAllCaches();
-    onDataChange();
-  };
+  const handleDelete = async(id:number)=>{
+    try{
+      const token = await jwtService.getToken();
+      await deleteById(id, token)
+      toast({ title: "Indicador", description: "Indicador excluido com sucesso" });
+      fetchData()
+    }catch(error){
+      console.log("erro:", error);
+      toast({ title: "Indicador", description: "Erro ao excluir Indicador" });
+    }
+  }
 
   // Se estiver carregando ou se houver erro externo
-  if (loading || isLoading) {
+  if (loading) {
     return <LoadingState isLoading={true} />;
   }
 
@@ -65,28 +102,11 @@ export function PlanoContasIndicadores({ indicadores, grupos, onDataChange, isLo
       <CardContent className="p-4">
         <div className="flex justify-between mb-4">
           <div className="flex gap-2">
-            <IndicadorDialog onSave={handleSaveIndicador} />
-            <Button 
-              variant="outline"
-              onClick={handleReplicar}
-              disabled={replicating}
-            >
-              {replicating ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Replicando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Replicar para Todos
-                </>
-              )}
-            </Button>
+            <IndicadorDialog onSave={handleCreate} />
           </div>
         </div>
         
-        <IndicadoresTable indicadores={indicadores} onDataChange={handleSaveIndicador} />
+        <IndicadoresTable indicadores={indicadores} onDelete={handleDelete}  />
       </CardContent>
     </Card>
   );
