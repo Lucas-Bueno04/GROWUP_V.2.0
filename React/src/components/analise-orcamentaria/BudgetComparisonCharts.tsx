@@ -12,9 +12,10 @@ import { ChartEmptyState } from './charts/ChartEmptyState';
 interface BudgetComparisonChartsProps {
   budgetId:number
   isLoading?: boolean;
+  months:string[]
 }
 
-export function BudgetComparisonCharts({ budgetId, isLoading }: BudgetComparisonChartsProps) {
+export function BudgetComparisonCharts({ budgetId, isLoading , months}: BudgetComparisonChartsProps) {
   if (isLoading) {
     return <ChartLoadingState />;
   }
@@ -45,11 +46,11 @@ export function BudgetComparisonCharts({ budgetId, isLoading }: BudgetComparison
         </TabsContent>
         
         <TabsContent value="trend">
-          <TrendChart  />
+          <TrendChart id={budgetId} />
         </TabsContent>
         
         <TabsContent value="grupos">
-          {/*<GroupsVariationChart />*/}
+          <GroupsVariationChart months={months} budgetId={budgetId}/>
         </TabsContent>
       </Tabs>
     </div>

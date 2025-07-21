@@ -29,7 +29,7 @@ export function getVarianceInterpretation(variancia: number, orcado: number, sin
   return { status, isPositiveOutcome };
 }
 
-export function getVarianceStatusIcon(variancia: number, orcado: number, sinal: '+' | '-') {
+export function getVarianceStatusIcon(variancia: number, orcado: number) {
   const { status } = getVarianceInterpretation(variancia, orcado, sinal);
   
   switch (status) {

@@ -54,10 +54,6 @@ const Metas = () => {
       />
       
       <div className="space-y-6">
-        <MetasSummaryCards
-            indicadoresProprios={0}
-            IndicadoresPlanodeContas={0}
-        />
        
         <MetasMainContent
         />

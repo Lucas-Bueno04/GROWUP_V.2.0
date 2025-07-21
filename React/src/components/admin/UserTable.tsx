@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Table, 
   TableBody, 
@@ -10,26 +9,65 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { UserProfile } from "@/pages/AdminAcessos";
 import { UserActions } from "./UserActions";
+import { User } from "../interfaces/User";
+import axios from "axios";
+import { JwtService } from "@/components/auth/GetAuthParams";
 
-interface UserTableProps {
-  users: UserProfile[] | null;
-  isLoading: boolean;
-  error: Error | null;
-  onResetPassword: (user: UserProfile) => void;
-  onToggleBlock: (user: UserProfile) => void;
-  onDelete: (user: UserProfile) => void;
-}
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
-export function UserTable({
-  users,
-  isLoading,
-  error,
-  onResetPassword,
-  onToggleBlock,
-  onDelete
-}: UserTableProps) {
+const getAll = async(token: string): Promise<User[]> => {
+  const response = await axios.get(`${API_KEY}/users/all`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+const deleteByEmail = async(email: string, token: string): Promise<void> => {
+  await axios.delete(`${API_KEY}/users/delete/${email}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+};
+
+export function UserTable() {
+  const [users, setUsers] = useState<User[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const token = jwtService.getToken();
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        setIsLoading(true);
+        const usersData = await getAll(token);
+        setUsers(usersData);
+      } catch (err: any) {
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUsers();
+  }, [token]);
+
+  // Função para deletar usuário e atualizar a lista
+  async function onDelete(email: string) {
+    if (!window.confirm(`Confirma a exclusão do usuário ${email}?`)) return;
+    try {
+      await deleteByEmail(email, token);
+      setUsers((prev) => prev ? prev.filter(user => user.email !== email) : null);
+    } catch (err) {
+      alert("Erro ao deletar usuário.");
+    }
+  }
+
+  // Funções vazias para os botões que não devem ter funcionalidade
+  const onResetPassword = () => {};
+  const onToggleBlock = () => {};
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -64,42 +102,20 @@ export function UserTable({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Perfil</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Data Cadastro</TableHead>
-            <TableHead>Último Acesso</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.nome}</TableCell>
+              <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Badge variant={user.role === 'mentor' ? 'default' : 'outline'}>
-                  {user.role}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={user.is_blocked ? 'destructive' : 'default'}>
-                  {user.is_blocked ? 'Bloqueado' : 'Ativo'}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
-              </TableCell>
-              <TableCell>
-                {user.last_sign_in_at ? 
-                  new Date(user.last_sign_in_at).toLocaleDateString() : 
-                  'Não disponível'}
-              </TableCell>
               <TableCell className="text-right">
                 <UserActions 
                   user={user}
                   onResetPassword={onResetPassword}
                   onToggleBlock={onToggleBlock}
-                  onDelete={onDelete}
+                  onDelete={() => onDelete(user.email)}
                 />
               </TableCell>
             </TableRow>

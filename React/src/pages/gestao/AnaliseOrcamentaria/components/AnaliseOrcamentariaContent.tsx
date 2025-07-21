@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { AnaliseOrcamentariaEmpresaHeader } from '@/components/analise-orcamentaria/AnaliseOrcamentariaEmpresaHeader';
 import { ExecutiveSummaryCards } from '@/components/analise-orcamentaria/ExecutiveSummaryCards';
 import { BudgetComparisonCharts } from '@/components/analise-orcamentaria/BudgetComparisonCharts';
-import { HierarchicalAnalysisTable } from '@/components/analise-orcamentaria/HierarchicalAnalysisTable';
+import { HierarchicalAnalysisTable } from '@/components/analise-orcamentaria';
 import { BudgetAnalysisData } from '@/hooks/analise-orcamentaria/types';
 import { useParams, useNavigate, useAsyncError } from 'react-router-dom';
 import axios from 'axios';
@@ -13,6 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Budget } from '@/components/interfaces/Budget';
 import { ResultRequest } from '@/components/interfaces/ResultRequest'; 
 import { FormulaRequest } from '@/components/interfaces/FormulaRequest'; 
+import BudgetEditor from '@/pages/BudgetComponent';
 
 const API_KEY = import.meta.env.VITE_SPRING_API;
 const jwtService = new JwtService();
@@ -134,10 +135,16 @@ export default function AnaliseOrcamentariaContent() {
       {loading ? (
         <p>Carregando cards de resumo...</p>
         ) : (
-          <BudgetComparisonCharts isLoading={loading} budgetId={Number(id)}  />
+          <BudgetComparisonCharts isLoading={loading} budgetId={Number(id)} months={meses}  />
+      )}
+
+      {loading ? (
+        <p>Carregando cards de resumo...</p>
+        ) : (
+          <HierarchicalAnalysisTable months={meses}  budgetId={Number(id)}/>
       )}
       
-      {/*<HierarchicalAnalysisTable  />*/}
+      
     </>
   );
 }

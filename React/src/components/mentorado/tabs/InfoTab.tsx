@@ -1,78 +1,127 @@
-
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Mentorado } from "@/types/mentorado";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import axios from 'axios';
+import { JwtService } from "@/components/auth/GetAuthParams";
+import { User } from "@/components/interfaces/User";
 
-type InfoTabProps = {
-  mentorado: Mentorado;
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
+
+const getUserByEmail = async (email: string, token: string): Promise<User> => {
+  const response = await axios.get(`${API_KEY}/users/by-email/${email}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  return response.data;
 };
 
-export function InfoTab({ mentorado }: InfoTabProps) {
+const updateUser = async (user: User, token: string): Promise<void> => {
+  await axios.put(`${API_KEY}/users/update`, user, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+};
+
+
+const updatePassword = async (
+  email: string,
+  newPassword: string,
+  token: string
+): Promise<void> => {
+  await axios.put(`${API_KEY}/users/update-password`, null, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    params: {
+      email,
+      newPassword
+    }
+  });
+};
+
+export function InfoTab() {
+  const [user, setUser] = useState<User | null>(null);
+  const [editableUser, setEditableUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await jwtService.getToken();
+      const email = await jwtService.getClaim("sub") as string;
+      const userData = await getUserByEmail(email, token);
+      setUser(userData);
+      setEditableUser(userData);
+    };
+    fetchData();
+  }, []);
+
+  const handleInputChange = (field: keyof User, value: string) => {
+    if (editableUser) {
+      setEditableUser({ ...editableUser, [field]: value });
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editableUser || !user) return;
+    const token = await jwtService.getToken();
+    await updateUser(editableUser, token);
+    setUser(editableUser);
+    setIsEditing(false);
+    alert("Informações atualizadas com sucesso!");
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      alert("As senhas não coincidem.");
+      return;
+    }
+    const token = await jwtService.getToken();
+    const email = await jwtService.getClaim("sub") as string;
+    await updatePassword(email, newPassword, token);
+    setNewPassword('');
+    setConfirmPassword('');
+    alert("Senha alterada com sucesso!");
+  };
+
+  if (!editableUser) return null;
+
   return (
     <Card>
       <CardContent className="p-6 space-y-6 bg-slate-800 text-white rounded-md">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Alertas e Lembretes</h3>
-          <div className="flex space-x-4 mb-2">
-            <label className="flex items-center gap-1">
-              <input type="checkbox" checked readOnly />
-              <span>Aniversários</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input type="checkbox" checked readOnly />
-              <span>Pagamentos</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input type="checkbox" checked readOnly />
-              <span>Inatividade</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input type="checkbox" checked readOnly />
-              <span>Metas</span>
-            </label>
-          </div>
-          
-          <p className="text-sm text-gray-300 mt-4">
-            Nenhum alerta ou lembrete para este mentorado
-          </p>
-          
-          <div className="mt-4">
-            <h4 className="font-medium mb-2">Como funcionam os alertas?</h4>
-            <ul className="text-sm list-disc ml-5">
-              <li><strong>Aniversários:</strong> Exibe alertas quando o aniversário do mentorado está a 3 dias ou menos de distância.</li>
-              <li><strong>Pagamentos:</strong> Exibe alertas para parcelas que venceram ou vencerão nos próximos 7 dias.</li>
-              <li><strong>Inatividade:</strong> Mostra alertas quando o mentorado está há 15 dias ou mais sem acessar a plataforma.</li>
-              <li><strong>Metas:</strong> Mostra alertas para metas que estão próximas do prazo ou atrasadas.</li>
-            </ul>
-            <p className="text-sm mt-2">Alertas de alta prioridade geram notificações automáticas para o mentorado no sistema.</p>
-          </div>
-        </div>
-
+        {/* Informações Pessoais */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Informações Pessoais</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-gray-300">Nome</Label>
               <Input 
-                value={mentorado.nome} 
-                readOnly 
+                value={editableUser.name} 
+                readOnly={!isEditing}
+                onChange={e => handleInputChange("name", e.target.value)}
                 className="bg-slate-700 border-slate-600"
               />
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">CPF</Label>
               <Input 
-                value={mentorado.cpf} 
-                readOnly 
-                disabled
-                className="bg-slate-700 border-slate-600 cursor-not-allowed"
+                value={editableUser.cpf} 
+                readOnly ={!isEditing}
+                disabled ={!isEditing}
+                onChange={e => handleInputChange("cpf", e.target.value)}
+                className="bg-slate-700 border-slate-600 "
               />
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">Email</Label>
               <Input 
-                value={mentorado.email} 
+                value={editableUser.email} 
                 readOnly 
                 className="bg-slate-700 border-slate-600"
               />
@@ -80,27 +129,68 @@ export function InfoTab({ mentorado }: InfoTabProps) {
             <div className="space-y-2">
               <Label className="text-gray-300">Telefone</Label>
               <Input 
-                value={mentorado.telefone} 
-                readOnly 
+                value={editableUser.phone} 
+                readOnly={!isEditing}
+                onChange={e => handleInputChange("phone", e.target.value)}
                 className="bg-slate-700 border-slate-600"
               />
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">Data de Nascimento</Label>
               <Input 
-                value={mentorado.dataNascimento} 
-                readOnly 
+                value={editableUser.birthDate} 
+                readOnly={!isEditing}
+                onChange={e => handleInputChange("birthDate", e.target.value)}
                 className="bg-slate-700 border-slate-600"
               />
             </div>
             <div className="space-y-2">
               <Label className="text-gray-300">Status</Label>
               <Input 
-                value={mentorado.status} 
+                value="Ativo" 
                 readOnly 
                 className="bg-slate-700 border-slate-600 text-green-400 font-medium"
               />
             </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            {isEditing ? (
+              <>
+                <Button onClick={handleSave} variant="default">Salvar</Button>
+                <Button onClick={() => { setIsEditing(false); setEditableUser(user); }} variant="secondary">Cancelar</Button>
+              </>
+            ) : (
+              <Button onClick={() => setIsEditing(true)} variant="outline">Editar</Button>
+            )}
+          </div>
+        </div>
+
+        {/* Alterar Senha */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold mb-4">Alterar Senha</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Nova Senha</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                className="bg-slate-700 border-slate-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300">Confirmar Nova Senha</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="bg-slate-700 border-slate-600"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button onClick={handlePasswordChange} variant="default">Alterar Senha</Button>
           </div>
         </div>
       </CardContent>

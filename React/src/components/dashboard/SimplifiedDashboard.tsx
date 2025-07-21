@@ -1,128 +1,99 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useDashboardInteligente } from '@/hooks/dashboard/useDashboardInteligente';
+import { useOrcamentoEmpresasPorUsuario } from '@/hooks/orcamento-empresas';
+import { useMetasIndicadoresEmpresa } from '@/hooks/metas/useMetasIndicadoresEmpresa';
+import { useIndicadoresProprios } from '@/hooks/useIndicadoresProprios';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  BarChart3, 
+  Target, 
+  TrendingUp, 
+  Brain, 
+  Calendar,
+  Building2,
+  Zap,
+  Activity,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  DollarSign
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
-import React, { useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, Users, Building2, Target } from "lucide-react";
-import { JwtService } from "@/components/auth/GetAuthParams";
-import { useState } from "react";
-import { useDashboardData } from "@/hooks/useDashboardData";
-import axios from "axios";
-import { error } from "console";
+// Mock data for demonstration
+const performanceData = [
+  { month: 'Jan', valor: 75 },
+  { month: 'Fev', valor: 82 },
+  { month: 'Mar', valor: 78 },
+  { month: 'Abr', valor: 85 },
+  { month: 'Mai', valor: 88 },
+  { month: 'Jun', valor: 92 },
+];
 
-const API_KEY_USER = import.meta.env.VITE_SPRING_API_AUTH_ENDPOINT_REGISTER;
+const moduleData = [
+  { name: 'Cards Estratégicos', value: 85, color: '#8b5cf6' },
+  { name: 'Análise Orçamentária', value: 78, color: '#06b6d4' },
+  { name: 'Metas', value: 92, color: '#10b981' },
+  { name: 'Mach1%', value: 88, color: '#f59e0b' },
+  { name: 'Grow Up', value: 76, color: '#ef4444' },
+];
 
-export const SimplifiedDashboard = () => {
+const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState<string|unknown>("");
+export function SimplifiedDashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('overview');
   
-
-  useEffect(() => {
-    const jwtService = new JwtService();
-    const emailFromToken = jwtService.getClaim("sub");
-    setEmail(emailFromToken);
-  }, []);
-
-  useEffect(()=>{
-      const jwtService = new JwtService();
-
-      const fetchUserName = async ()=>{
-
-      if (!email) return; 
-
-      try{
-        const response = await axios.get(`${API_KEY_USER}/name`,{
-          params:{
-            email:email
-          },
-          headers:{
-            Authorization: `Bearer ${jwtService.getToken()}`
-          }
-        });
-        setName(response.data);
-      }catch(error){
-        console.error("Erro ao buscar nome do usuario:", error);
-      }
-    };
-
-    fetchUserName();
-  },[email]);
+  // Fetch data from all modules
+  const { data: orcamentoEmpresas = [] } = useOrcamentoEmpresasPorUsuario();
+  const empresaId = orcamentoEmpresas.length > 0 ? orcamentoEmpresas[0].empresa_id : null;
   
-    
+  const { data: dashboardData, isLoading: isDashboardLoading } = useDashboardInteligente(empresaId);
+  const { data: metasData = [] } = useMetasIndicadoresEmpresa(empresaId);
+  const { indicadoresProprios } = useIndicadoresProprios(empresaId);
+
+  const activeIndicators = indicadoresProprios.data?.filter(ind => ind.ativo).length || 0;
+  const totalMetas = metasData.length;
+  const performanceScore = dashboardData?.performanceScore || 0;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard Integrado</h1>
           <p className="text-muted-foreground">
-            Bem-vindo de volta, {(name as string) ||( (email as string)?.split('@')[0] || 'Usuário')}
+            Visão completa do seu progresso
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Activity className="h-3 w-3" />
+            Sistema Ativo
+          </Badge>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Empresas
-            </CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              Total de empresas cadastradas
-            </p>
-          </CardContent>
-        </Card>
+ 
+        
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Metas
-            </CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              Metas cadastradas
-            </p>
-          </CardContent>
-        </Card>
+      {/* Main Dashboard Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Performance
-            </CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-muted-foreground">
-              Indicadores de performance
-            </p>
-          </CardContent>
-        </Card>
+        <TabsContent value="overview" className="space-y-6">
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Usuários
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground">
-              Usuários ativos
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+           <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Visão Geral</CardTitle>
           </CardHeader>
@@ -133,33 +104,234 @@ export const SimplifiedDashboard = () => {
               </p>
             </div>
           </CardContent>
-        </Card>
-        
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
-            <CardDescription>
-              Acesse as principais funcionalidades
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Building2 className="h-4 w-4" />
-                <span className="text-sm">Cadastrar Empresa</span>
+          </Card>
+
+          {/* Quick Actions */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/gestao/cards-estrategicos')}>
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Brain className="h-8 w-8 text-purple-500 mb-2" />
+                <h3 className="font-semibold text-sm text-center">Cards Estratégicos</h3>
+                <p className="text-xs text-muted-foreground text-center mt-1">Planejamento estratégico</p>
+                <ArrowRight className="h-4 w-4 mt-2 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/gestao/analise-orcamentaria')}>
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <BarChart3 className="h-8 w-8 text-blue-500 mb-2" />
+                <h3 className="font-semibold text-sm text-center">Análise Orçamentária</h3>
+                <p className="text-xs text-muted-foreground text-center mt-1">Gestão financeira</p>
+                <ArrowRight className="h-4 w-4 mt-2 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/metas')}>
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Target className="h-8 w-8 text-green-500 mb-2" />
+                <h3 className="font-semibold text-sm text-center">Metas</h3>
+                <p className="text-xs text-muted-foreground text-center mt-1">Objetivos e KPIs</p>
+                <ArrowRight className="h-4 w-4 mt-2 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/conteudos/mach1')}>
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <Zap className="h-8 w-8 text-yellow-500 mb-2" />
+                <h3 className="font-semibold text-sm text-center">Mach1%</h3>
+                <p className="text-xs text-muted-foreground text-center mt-1">Aceleração de resultados</p>
+                <ArrowRight className="h-4 w-4 mt-2 text-muted-foreground" />
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/conteudos/grow-up')}>
+              <CardContent className="flex flex-col items-center justify-center p-6">
+                <TrendingUp className="h-8 w-8 text-red-500 mb-2" />
+                <h3 className="font-semibold text-sm text-center">Grow Up</h3>
+                <p className="text-xs text-muted-foreground text-center mt-1">Diagnóstico e maturidade</p>
+                <ArrowRight className="h-4 w-4 mt-2 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="strategic" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5" />
+                Cards Estratégicos
+              </CardTitle>
+              <CardDescription>
+                Gerencie seus planos estratégicos e tome decisões fundamentadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Módulo em Desenvolvimento</h3>
+                <p className="text-muted-foreground mb-4">
+                  Em breve você terá acesso ao sistema completo de Cards Estratégicos
+                </p>
+                <Button onClick={() => navigate('/conteudos/cards-estrategicos')}>
+                  Acessar Módulo
+                </Button>
               </div>
-              <div className="flex items-center space-x-2">
-                <Target className="h-4 w-4" />
-                <span className="text-sm">Definir Metas</span>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="financial" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Análise Orçamentária
+                </CardTitle>
+                <CardDescription>
+                  Acompanhe seus indicadores financeiros em tempo real
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Performance Score</span>
+                    <span className="text-lg font-bold">{performanceScore.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={performanceScore} className="h-2" />
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">{dashboardData?.resumoPerformance?.acimaGrupo || 0}</p>
+                      <p className="text-xs text-muted-foreground">Acima do grupo</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">{dashboardData?.resumoPerformance?.totalIndicadores || 0}</p>
+                      <p className="text-xs text-muted-foreground">Total indicadores</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Insights de IA</CardTitle>
+                <CardDescription>
+                  Recomendações personalizadas para seu negócio
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {dashboardData?.insights?.slice(0, 3).map((insight, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                      <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium">{insight.titulo}</p>
+                        <p className="text-xs text-muted-foreground">{insight.descricao}</p>
+                      </div>
+                    </div>
+                  )) || (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground">Processando insights...</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="goals" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Sistema de Metas
+              </CardTitle>
+              <CardDescription>
+                Acompanhe o progresso das suas metas e objetivos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="text-center p-4 rounded-lg border">
+                  <div className="text-2xl font-bold text-green-600">{totalMetas}</div>
+                  <p className="text-sm text-muted-foreground">Metas Ativas</p>
+                </div>
+                <div className="text-center p-4 rounded-lg border">
+                  <div className="text-2xl font-bold text-blue-600">{Math.floor(totalMetas * 0.8)}</div>
+                  <p className="text-sm text-muted-foreground">Em Progresso</p>
+                </div>
+                <div className="text-center p-4 rounded-lg border">
+                  <div className="text-2xl font-bold text-purple-600">{Math.floor(totalMetas * 0.6)}</div>
+                  <p className="text-sm text-muted-foreground">Concluídas</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-4 w-4" />
-                <span className="text-sm">Ver Relatórios</span>
+              
+              <div className="mt-6">
+                <Button className="w-full" onClick={() => navigate('/conteudos/metas')}>
+                  <Target className="h-4 w-4 mr-2" />
+                  Gerenciar Metas
+                </Button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="development" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Mach1%
+                </CardTitle>
+                <CardDescription>
+                  Acelere seus resultados com metodologias avançadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-6">
+                  <Zap className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Aceleração de Performance</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Metodologias para acelerar seus resultados empresariais
+                  </p>
+                  <Button onClick={() => navigate('/conteudos/mach1')}>
+                    Acessar Mach1%
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Grow Up
+                </CardTitle>
+                <CardDescription>
+                  Diagnóstico de maturidade empresarial
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-6">
+                  <TrendingUp className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Diagnóstico Empresarial</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Avalie a maturidade e evolução do seu negócio
+                  </p>
+                  <Button onClick={() => navigate('/conteudos/grow-up')}>
+                    Fazer Diagnóstico
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
+}

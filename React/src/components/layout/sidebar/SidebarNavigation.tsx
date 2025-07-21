@@ -122,16 +122,7 @@ export const SidebarNavigation = () => {
             icon={PieChart}
             label="Painel de Indicadores"
           />
-          <SidebarItem 
-            to="/mentorados" 
-            icon={School2}
-            label="Gestão de Mentorados"
-          />
-          <SidebarItem 
-            to="/admin/cnpj" 
-            icon={Building}
-            label="Gestão de CNPJ"
-          />
+          
           <SidebarItem 
             to="/admin/acessos" 
             icon={Users}

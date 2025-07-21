@@ -1,112 +1,146 @@
+// HierarchicalAnalysisTable.tsx
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Calculator } from "lucide-react";
+import { JwtService } from "@/components/auth/GetAuthParams";
+import axios from "axios";
+import {GroupRow} from "./components/GroupRow";
 
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
-import { BudgetAnalysisData } from '@/hooks/analise-orcamentaria';
-import { HierarchicalTableHeader } from './components/HierarchicalTableHeader';
-import { GroupRow } from './components/GroupRow';
-import { exportHierarchicalDataToCSV } from './utils/csvExport';
+const API_KEY = import.meta.env.VITE_SPRING_API;
+const jwtService = new JwtService();
 
-interface HierarchicalAnalysisTableProps {
-  data: BudgetAnalysisData;
-  isLoading?: boolean;
+interface Account {
+  id: number;
+  cod: string;
+  name: string;
+  budgeted: number;
+  carried: number;
 }
 
-export function HierarchicalAnalysisTable({ data, isLoading }: HierarchicalAnalysisTableProps) {
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+interface Group {
+  id: number;
+  cod: string;
+  name: string;
+  budgeted: number;
+  carried: number;
+  accounts: Account[];
+}
 
-  const toggleGroup = (groupId: string) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(groupId)) {
-      newExpanded.delete(groupId);
-    } else {
-      newExpanded.add(groupId);
-    }
-    setExpandedGroups(newExpanded);
-  };
+interface HierarchicalProps {
+  budgetId: number;
+  months: string[];
+}
 
-  const getMonthlyData = (conta: any, month: number) => {
-    const monthData = conta.dadosMensais?.find((m: any) => m.mes === month);
-    return monthData || { orcado: 0, realizado: 0 };
-  };
+export  function HierarchicalAnalysisTable({ budgetId, months }: HierarchicalProps) {
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const getGroupMonthlyData = (grupo: any, month: number) => {
-    const monthData = grupo.dadosMensais?.find((m: any) => m.mes === month);
-    return monthData || { orcado: 0, realizado: 0 };
-  };
-
-  const getGroupDisplayValues = (grupo: any) => {
-    if (selectedMonth === 'all') {
-      return {
-        orcado: grupo.orcado,
-        realizado: grupo.realizado,
-        variancia: grupo.variancia
-      };
-    } else {
-      const monthData = getGroupMonthlyData(grupo, parseInt(selectedMonth));
-      return {
-        orcado: monthData.orcado,
-        realizado: monthData.realizado,
-        variancia: monthData.realizado - monthData.orcado
-      };
-    }
-  };
-
-  const handleExportCSV = () => {
-    exportHierarchicalDataToCSV(data, selectedMonth, getGroupDisplayValues, getMonthlyData);
-  };
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse">
-            <div className="h-6 bg-gray-200 rounded mb-4"></div>
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+  async function getGroupSumByMonth(idBudget: number, months: string[], token: string): Promise<any[]> {
+    const response = await axios.post(
+      `${API_KEY}/analist/group-sum/months/${idBudget}`,
+      months,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+    return response.data;
   }
+
+  async function getAccountSumByMonth(idBudget: number, months: string[], token: string): Promise<any[]> {
+    const response = await axios.post(
+      `${API_KEY}/analist/account-sum/months/${idBudget}`,
+      months,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  }
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = jwtService.getToken();
+
+        // Buscar dados
+        const [groupData, accountData] = await Promise.all([
+          getGroupSumByMonth(budgetId, months, token),
+          getAccountSumByMonth(budgetId, months, token),
+        ]);
+
+        // Mapear grupos
+        const groupsMapped: Group[] = groupData.map(g => ({
+          id: g.groupId,
+          cod: g.groupCod.trim(),
+          name: g.groupName.trim(),
+          budgeted: g.budgeted,
+          carried: g.carried,
+          accounts: []
+        }));
+
+        // Mapear contas e associar ao grupo correspondente
+        accountData.forEach(acc => {
+          const group = groupsMapped.find(g => g.id === acc.groupId);
+          if (group) {
+            group.accounts.push({
+              id: acc.accountId,
+              cod: acc.accountCod.trim(),
+              name: acc.accountName.trim(),
+              budgeted: acc.budgeted,
+              carried: acc.carried,
+            });
+          }
+        });
+
+        setGroups(groupsMapped);
+      } catch (err) {
+        setError("Erro ao buscar dados.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [budgetId, months]);
+
+  function toggleGroupExpanded(id: number) {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }
+
+  if (loading) return <div>Carregando...</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
 
   return (
     <Card>
-      <HierarchicalTableHeader
-        selectedMonth={selectedMonth}
-        onMonthChange={setSelectedMonth}
-        onExportCSV={handleExportCSV}
-      />
+      <CardHeader>
+        <CardTitle>
+          <Calculator className="inline-block mr-2" /> Análise Hierárquica
+        </CardTitle>
+        <CardDescription>
+          Visualize os grupos e contas com seus valores orçados e realizados.
+        </CardDescription>
+      </CardHeader>
       <CardContent>
-        {data.dadosHierarquicos.grupos.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <TrendingUp className="h-16 w-16 mx-auto mb-4 opacity-50" />
-            <p>Nenhum dado encontrado</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {data.dadosHierarquicos.grupos.map((grupo) => {
-              const isExpanded = expandedGroups.has(grupo.id);
-              const groupValues = getGroupDisplayValues(grupo);
-              
-              return (
-                <GroupRow
-                  key={grupo.id}
-                  grupo={grupo}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleGroup(grupo.id)}
-                  groupValues={groupValues}
-                  selectedMonth={selectedMonth}
-                  getMonthlyData={getMonthlyData}
-                />
-              );
-            })}
-          </div>
-        )}
+        {groups.length === 0 && <div>Nenhum dado disponível.</div>}
+
+        {groups.map(group => (
+          <GroupRow
+            key={group.id}
+            grupo={group}
+            isExpanded={expandedGroups.has(group.id)}
+            onToggle={() => toggleGroupExpanded(group.id)}
+          />
+        ))}
       </CardContent>
     </Card>
   );

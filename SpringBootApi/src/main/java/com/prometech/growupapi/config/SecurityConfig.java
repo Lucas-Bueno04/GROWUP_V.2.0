@@ -35,6 +35,10 @@ public class SecurityConfig {
 	
 	public static final String [] ENDPOINTS_WITH_AUTHENTICATION_REQUIRED = {
 			"/api/v1/users/**",
+			"/api/v1/users/by-email/**",
+			"/api/v1/users/update/**",
+			"/api/v1/users/update-password/**",
+			"/api/v1/users/delete/**",
 			"api/v1/size",
 			"api/v1/size/by-invoicing",
 			"/api/v1/group",
@@ -70,7 +74,8 @@ public class SecurityConfig {
 			"/api/v1/analist/account-average/months/**",
 			"/api/v1/analist/net-revenue/month/**",
 			"/api/v1/analist/net-revenue/budget/**",
-			"/api/v1/analist/formula/evaluate/**"
+			"/api/v1/analist/formula/evaluate/**",
+			
 	};
 	
 	public static  final String [] ENDPOINTS_CUSTOMER ={
@@ -88,7 +93,8 @@ public class SecurityConfig {
 			"/api/v1/account/delete/**",
 			"/api/v1/account/create/**",
 			"/api/v1/indicator/admin-indicator/create/**",
-			"/api/v1/indicator/admin-indicator/delete/**"
+			"/api/v1/indicator/admin-indicator/delete/**",
+			"/api/v1/users/all/**"
 		
 	};
 	

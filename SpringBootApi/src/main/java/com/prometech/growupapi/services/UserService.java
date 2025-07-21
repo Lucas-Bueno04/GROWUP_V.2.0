@@ -3,10 +3,7 @@ package com.prometech.growupapi.services;
 import com.prometech.growupapi.config.SecurityConfig;
 import com.prometech.growupapi.domain.Role;
 import com.prometech.growupapi.domain.User;
-import com.prometech.growupapi.dto.CreateUserDto;
-import com.prometech.growupapi.dto.LoginUserDto;
-import com.prometech.growupapi.dto.RecoveryJwtTokenDto;
-import com.prometech.growupapi.dto.RecoveryUserDto;
+import com.prometech.growupapi.dto.*;
 import com.prometech.growupapi.repositories.UserRepository;
 import com.prometech.growupapi.security.JwtTokenService;
 import com.prometech.growupapi.security.UserDetailsImpl;
@@ -63,5 +60,59 @@ public class UserService {
 		return user.getName();
 	}
 	
+	public UserDto getUserByEmail (String email) {
+		User user = userRepository.findByEmail(email)
+				            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com email: " + email));
+		
+		return new UserDto(user.getId(), user.getName(),user.getEmail(),user.getCpf(), user.getPhone(), user.getBirthDate());
+	}
+
+	public UserDto updateUser(UserDto userDto) {
+		// Busca o usuário existente pelo id
+		User user = userRepository.findById(userDto.id())
+				            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com id: " + userDto.id()));
+		
+		// Atualiza os campos (exceto a senha)
+		user.setName(userDto.name());
+		user.setEmail(userDto.email());
+		user.setCpf(userDto.cpf());
+		user.setPhone(userDto.phone());
+		user.setBirthDate(userDto.birthDate());
+		
+		// Salva as alterações
+		user = userRepository.save(user);
+		
+		// Retorna o DTO atualizado (pode usar um método converter para DTO)
+		return new UserDto(user.getId(), user.getName(), user.getEmail(), user.getCpf(), user.getPhone(), user.getBirthDate());
+	}
+
+	public void updatePasswordByEmail(String email, String newPassword) {
+		User user = userRepository.findByEmail(email)
+				            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com email: " + email));
+		
+		
+		user.setPassword(securityConfig.passwordEncoder().encode(newPassword));
+		
+		userRepository.save(user);
+	}
+	
+	public void delete(String email){
+		User user = userRepository.findByEmail(email)
+				            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com email: " + email));
+		
+		userRepository.delete(user);
+	}
+	public List<UserDto> getAllUsers() {
+		List<User> users = userRepository.findAll();
+		return users.stream()
+				       .map(user -> new UserDto(
+						       user.getId(),
+						       user.getName(),
+						       user.getEmail(),
+						       user.getCpf(),
+						       user.getPhone(),
+						       user.getBirthDate()))
+				       .toList();
+	}
 	
 }
