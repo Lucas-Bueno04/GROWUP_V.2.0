@@ -126,13 +126,17 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.addAllowedOriginPattern("*"); // sua origem frontend
+		
+		// Aqui está o ponto chave:
+		configuration.addAllowedOriginPattern("*"); // aceita qualquer origem
+		configuration.setAllowCredentials(true);    // permite envio de cookies/autorização
+		
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-		configuration.setAllowCredentials(true); // se for usar cookies, senão pode remover
 		
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
+		
 		return source;
 	}
 	
