@@ -26,7 +26,7 @@ const getAllUserIndicators = async (email: string, token: string): Promise<Indic
   return response.data;
 };
 
-const getBudgetNameById = async(id:number, token:string):Promise<string>=>{
+const getBudgetNameById = async (id: number, token: string): Promise<string> => {
   const response = await axios.get(`${API_KEY}/budget/by-id/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -52,40 +52,42 @@ export function CardsEstrategicosPageContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = await jwtService.getToken() || '';
-      if (id) {
-        const budgetName = await getBudgetNameById(Number(id), token);
-        setBudgetName(budgetName);
+      setLoading(true);
+      try {
+        const token = await jwtService.getToken() || '';
+        const email = await jwtService.getClaim("sub") as string || '';
+
+        if (id) {
+          const budgetId = Number(id);
+
+          // Executa todas as requisições em paralelo
+          const [nomeOrcamento, indicadoresAdmin, indicadoresUser] = await Promise.all([
+            getBudgetNameById(budgetId, token),
+            getAllAdminIndicators(token),
+            getAllUserIndicators(email, token),
+          ]);
+
+          setBudgetName(nomeOrcamento);
+          setIndicadoresPlanoDeContas(indicadoresAdmin);
+          setIndicadoresPessoais(indicadoresUser);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados dos cards estratégicos:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchData();
-  }, [id]);
 
-  const loadCards = async () => {
-    setLoading(true);
-    try {
-      const token = await jwtService.getToken() || '';
-      const email = await jwtService.getClaim("sub") as string || "";
-      const dataAdmin = await getAllAdminIndicators(token);
-      const dataPessoal = await getAllUserIndicators(email, token);
-      setIndicadoresPessoais(dataPessoal);
-      setIndicadoresPlanoDeContas(dataAdmin);
-    } catch (error) {
-      console.error("Erro ao carregar indicadores:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (id) {
-      loadCards();
-    }
+    if (id) fetchData();
   }, [id]);
 
   return (
     <div className="space-y-6">
-      <Button variant="outline" className="mb-4 flex gap-2 items-center" onClick={() => navigate("/gestao/cards-estrategicos")}>
+      <Button
+        variant="outline"
+        className="mb-4 flex gap-2 items-center"
+        onClick={() => navigate("/gestao/cards-estrategicos")}
+      >
         <ArrowLeft className="w-4 h-4" /> Retornar
       </Button>
 
@@ -101,7 +103,7 @@ export function CardsEstrategicosPageContent() {
           indicadoresPessoais={indicadoresPessoais}
           id={Number(id)}
           meses={meses}
-          setStats={setStats} // Passa a função para atualizar stats
+          setStats={setStats}
         />
       )}
     </div>
