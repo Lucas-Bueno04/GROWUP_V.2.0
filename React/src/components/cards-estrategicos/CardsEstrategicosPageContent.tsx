@@ -43,7 +43,7 @@ export function CardsEstrategicosPageContent() {
     dentro: 0,
     abaixo: 0,
   });
-
+a
   const [indicadoresPlanoDeContas, setIndicadoresPlanoDeContas] = useState<IndicatorResponse[]>([]);
   const [indicadoresPessoais, setIndicadoresPessoais] = useState<IndicatorResponse[]>([]);
   const [loading, setLoading] = useState(false);

@@ -170,7 +170,7 @@ export default function Login() {
             </Button>
             <div className="text-sm text-center text-muted-foreground">
               Não tem uma conta?{" "}
-              <Link to="/register" className="text-primary hover:underline">
+              <Link to="" className="text-primary hover:underline">
                 Cadastre-se
               </Link>
             </div>
