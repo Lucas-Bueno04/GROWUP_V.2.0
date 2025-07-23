@@ -91,7 +91,7 @@ export const SidebarNavigation = () => {
         <SidebarItem 
           to="/metas" 
           icon={Target}
-          label="Metas"
+          label="Indicadores"
         />
       </SidebarSection>
 

@@ -15,7 +15,7 @@ export default function Index() {
     // Simula carregamento e verifica token
     const token = localStorage.getItem("token");
 
-    if (token ! == null) {
+    if (token && typeof token === "string") {
       setUserAuthenticated(true);
     } else {
       setUserAuthenticated(false);

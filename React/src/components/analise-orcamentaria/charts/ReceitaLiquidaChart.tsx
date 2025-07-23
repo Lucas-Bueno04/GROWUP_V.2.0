@@ -116,7 +116,7 @@ export function ReceitaLiquidaChart({ budgetId }) {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={receitaLiquidaChartData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
+              <XAxis dataKey="mes" angle={-45} textAnchor='end' height={60} />
               <YAxis tickFormatter={formatCurrency} />
               <Tooltip formatter={(value: number) => formatCurrency(value)} />
               <Legend />

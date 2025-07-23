@@ -73,7 +73,7 @@ function App() {
                   <Route path="/gestao/analise-orcamentaria" element={<AuthGuard><Layout><AnaliseOrcamentaria/></Layout></AuthGuard>} />
 
                   {/* Rotas de conteúdo */}
-                  <Route path="/conteudos/aulas-men sais" element={<AuthGuard><Layout><AulasMensais /></Layout></AuthGuard>} />
+                  <Route path="/conteudos/aulas-mensais" element={<AuthGuard><Layout><AulasMensais /></Layout></AuthGuard>} />
                   <Route path="/conteudos/cursos" element={<AuthGuard><Layout><Cursos /></Layout></AuthGuard>} />
                   <Route path="/conteudos/grow-up" element={<AuthGuard><Layout><GrowUp/></Layout></AuthGuard>} />
                   <Route path="/conteudos/mach1" element={<AuthGuard><Layout><Mach1Dashboard /></Layout></AuthGuard>} />

@@ -41,7 +41,7 @@ export const Layout = ({ children }: LayoutProps) => {
               <SidebarTrigger />
             </div>
             <main className="flex-1 overflow-y-auto sidebar-scrollbar bg-background">
-              <div className="relative w-full h-full z-10">
+              <div className="relative w-full h-full z-10 p-3">
                 {children}
               </div>
             </main>

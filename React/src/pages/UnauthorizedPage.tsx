@@ -42,7 +42,8 @@ export default function UnauthorizedPage() {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      localStorage.setItem("token", null)
+      navigate("/login")
       // Navigation will be handled by the signOut function
     } catch (error) {
       console.error("Error signing out:", error);
@@ -72,14 +73,6 @@ export default function UnauthorizedPage() {
           </div>
           
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Button 
-              onClick={handleRefresh} 
-              className="gap-2" 
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? "Atualizando..." : "Atualizar Perfil"}
-            </Button>
             
             <Button 
               onClick={handleSignOut} 

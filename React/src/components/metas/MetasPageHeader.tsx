@@ -13,7 +13,7 @@ export function MetasPageHeader({
   if (hasErrors) {
     return (
       <Header 
-        title="Metas de Indicadores" 
+        title="Indicadores" 
         description="Erro ao carregar dados das metas"
         colorScheme="red"
         actions={
@@ -31,8 +31,8 @@ export function MetasPageHeader({
 
   return (
     <Header 
-      title="Metas de Indicadores" 
-      description="Defina e acompanhe suas metas para indicadores do plano de contas e indicadores personalizados"
+      title="Indicadores" 
+      description="Defina e acompanhe seus indicadores do plano de contas e indicadores personalizados"
       colorScheme="red"
     />
   );

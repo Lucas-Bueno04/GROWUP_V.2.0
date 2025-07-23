@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useMemo } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { JwtService } from "@/components/auth/GetAuthParams";
 
@@ -9,26 +9,41 @@ interface AuthGuardProps {
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ allowedRoles, children }) => {
   const navigate = useNavigate();
-  const jwtService = useMemo(() => new JwtService(), []);
+  const jwtService = new JwtService();
 
-  const isAuthenticated = useMemo(() => jwtService.validateToken(), [jwtService]);
-  const isAuthorized = useMemo(() => jwtService.hasRoles(allowedRoles), [jwtService, allowedRoles]);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      localStorage.setItem("token", null);
-      navigate("/login");
-    }
-  }, [isAuthenticated, navigate]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (!isAuthorized) {
-      navigate("/unauthorized");
+    async function checkAuth() {
+      const valid = await jwtService.validateToken();
+      setIsAuthenticated(valid);
+
+      if (!valid) {
+        jwtService.clearToken();
+        navigate("/login");
+        return;
+      }
+
+      const authorized = jwtService.hasRoles(allowedRoles);
+      setIsAuthorized(authorized);
+
+      if (!authorized) {
+        navigate("/unauthorized");
+      }
     }
-  }, [isAuthorized, navigate]);
+
+    checkAuth();
+  }, [jwtService, allowedRoles, navigate]);
+
+  // Enquanto não sabe, evita renderizar conteúdo
+  if (isAuthenticated === null || isAuthorized === null) {
+    return null;
+  }
 
   if (!isAuthenticated || !isAuthorized) {
-    return null; // impede renderização prematura
+    // Já navegou no useEffect
+    return null;
   }
 
   return <>{children}</>;
