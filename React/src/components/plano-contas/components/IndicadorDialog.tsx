@@ -145,7 +145,7 @@ export function IndicadorDialog({ indicador, onSave, onCancel }: IndicadorDialog
               id="formula"
               value={formData.formula}
               onChange={(e) => setFormData(prev => ({ ...prev, formula: e.target.value }))}
-              placeholder="Ex: (G5/G3)*100"
+              placeholder="Ex: (G_5/C_3.1)*100"
               required
               className="font-mono"
             />

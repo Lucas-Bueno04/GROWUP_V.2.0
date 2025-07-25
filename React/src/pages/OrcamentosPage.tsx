@@ -119,7 +119,8 @@ function criarBudgetRequest(
 export default function OrcamentosPage() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [enterprises, setEnterprises] = useState<Enterprise[]>([]);
-  const [budgetName, setBudgetName] = useState('');
+  const [budgetName, setBudgetName] = useState("");
+  const [budgetYear, setBudgetYear] = useState<number>(null);
   const [selectedEnterpriseId, setSelectedEnterpriseId] = useState<number | null>(null);
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -159,13 +160,12 @@ export default function OrcamentosPage() {
       try {
         const token = jwtService.getToken();
         const email = jwtService.getClaim("sub") as string;
-        const year = new Date().getFullYear();
   
         const groups = await getAllGroupsWithAccounts(token);
 
         const contas: Account[] = groups.flatMap(group => group.accounts);
   
-        const budgetRequest = criarBudgetRequest(contas, selectedEnterpriseId, budgetName, year);
+        const budgetRequest = criarBudgetRequest(contas, selectedEnterpriseId, budgetName, budgetYear);
         console.log(budgetRequest)
         await createNewBudget(budgetRequest, token);
 
@@ -242,6 +242,15 @@ export default function OrcamentosPage() {
                   placeholder="Ex: Orçamento 2025"
                   value={budgetName}
                   onChange={(e) => setBudgetName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="budget-name">Ano do orçamento</Label>
+                <Input
+                  id="budget-name"
+                  placeholder="Ex: 2026"
+                  value={budgetYear}
+                  onChange={(e) => setBudgetYear(Number(e.target.value))}
                 />
               </div>
             </div>
