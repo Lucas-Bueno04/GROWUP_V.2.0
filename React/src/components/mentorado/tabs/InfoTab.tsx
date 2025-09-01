@@ -27,7 +27,6 @@ const updateUser = async (user: User, token: string): Promise<void> => {
   });
 };
 
-
 const updatePassword = async (
   email: string,
   newPassword: string,
@@ -44,6 +43,15 @@ const updatePassword = async (
   });
 };
 
+// 🔹 Helper para normalizar data em formato ISO (yyyy-MM-dd)
+const normalizeToISODate = (value?: string | null) => {
+  if (!value) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10); // já ISO
+  const m = value.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return value;
+};
+
 export function InfoTab() {
   const [user, setUser] = useState<User | null>(null);
   const [editableUser, setEditableUser] = useState<User | null>(null);
@@ -56,8 +64,14 @@ export function InfoTab() {
       const token = await jwtService.getToken();
       const email = await jwtService.getClaim("sub") as string;
       const userData = await getUserByEmail(email, token);
-      setUser(userData);
-      setEditableUser(userData);
+
+      const normalized = {
+        ...userData,
+        birthDate: normalizeToISODate(userData.birthDate),
+      };
+
+      setUser(normalized);
+      setEditableUser(normalized);
     };
     fetchData();
   }, []);
@@ -71,8 +85,14 @@ export function InfoTab() {
   const handleSave = async () => {
     if (!editableUser || !user) return;
     const token = await jwtService.getToken();
-    await updateUser(editableUser, token);
-    setUser(editableUser);
+
+    const payload = {
+      ...editableUser,
+      birthDate: normalizeToISODate(editableUser.birthDate),
+    };
+
+    await updateUser(payload, token);
+    setUser(payload);
     setIsEditing(false);
     alert("Informações atualizadas com sucesso!");
   };
@@ -112,8 +132,8 @@ export function InfoTab() {
               <Label className="text-gray-300">CPF</Label>
               <Input 
                 value={editableUser.cpf} 
-                readOnly ={!isEditing}
-                disabled ={!isEditing}
+                readOnly={!isEditing}
+                disabled={!isEditing}
                 onChange={e => handleInputChange("cpf", e.target.value)}
                 className="bg-slate-700 border-slate-600 "
               />
@@ -138,8 +158,10 @@ export function InfoTab() {
             <div className="space-y-2">
               <Label className="text-gray-300">Data de Nascimento</Label>
               <Input 
-                value={editableUser.birthDate} 
+                type="date"
+                value={editableUser.birthDate ? normalizeToISODate(editableUser.birthDate) : ''}
                 readOnly={!isEditing}
+                disabled={!isEditing}
                 onChange={e => handleInputChange("birthDate", e.target.value)}
                 className="bg-slate-700 border-slate-600"
               />
