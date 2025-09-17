@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Baby, Footprints, TrendingUp, Crown, Landmark, Shield , Medal, Rocket, Gem} from "lucide-react";
+
 
 const API_ENDPOINT = import.meta.env.VITE_SPRING_API;
 const jwtService = new JwtService()
@@ -52,6 +54,36 @@ interface EmpresaAtivaCardProps {
   onDeleteEnterprise?:()=>void;
 }
 
+const sizeIcons: Record<string, React.ElementType> = {
+  Newborn: Medal,
+  EarlyWalker: TrendingUp,
+  Scaler: Rocket,
+  Authority: Crown,
+  Legacy: Landmark,
+  Invencible: Gem,
+};
+
+const sizeColors: Record<string, string> = {
+  Newborn: "text-pink-500",
+  EarlyWalker: "text-orange-500",
+  Scaler: "text-red-500",
+  Authority: "text-purple-500",
+  Legacy: "text-yellow-600",
+  Invencible: "text-white-600",
+};
+
+function CompanySizeIcon({ size }: { size?: string }) {
+  if (!size) return null;
+
+  const Icon = sizeIcons[size] || Shield;
+  const color = sizeColors[size] || "text-gray-400";
+  return (
+    <Icon
+      className={`w-32 h-16 ml-3 inline-block ${color} drop-shadow-md`}
+      strokeWidth={2.5} // ícones Lucide ficam mais robustos
+    />
+  );
+}
 const deleteEnterprise = async(id, token) :Promise<void>=>{
   const response = await axios.delete(`${API_ENDPOINT}/enterprise/delete/${id}`,{
     headers: {
@@ -150,24 +182,10 @@ export function EmpresaAtivaCard({ empresa,onDeleteEnterprise }: EmpresaAtivaCar
       <CardContent className="p-4 flex flex-col h-full">
         {/* Header with Badge and Company Name */}
         <div className="flex items-start gap-3 mb-4">
-          {/*
-          <div className="flex-shrink-0">
-            {badgeData?.classification ? (
-              <CompanyMedal 
-                classification={badgeData.classification} 
-                currentRevenue={badgeData.currentRevenue}
-                size="sm" 
-                showProgress={false}
-              />
-            ) : (
-              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
-                <Building className="w-6 h-6 text-gray-400" />
-              </div>
-            )}
-          </div>*/}
           
-          <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
             <h4 className="font-bold text-lg leading-tight mb-1">{empresa.tradeName ||empresa.corporateName}</h4>
+            <CompanySizeIcon size={empresa.size?.name} />
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
               Ativa
             </Badge>
