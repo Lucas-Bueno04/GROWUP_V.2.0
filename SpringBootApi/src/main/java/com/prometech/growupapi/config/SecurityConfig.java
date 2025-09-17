@@ -75,7 +75,9 @@ public class SecurityConfig {
 			"/api/v1/analist/net-revenue/month/**",
 			"/api/v1/analist/net-revenue/budget/**",
 			"/api/v1/analist/formula/evaluate/**",
-			
+			"/api/v1/enterprise_user",
+			"/api/v1/enterprise_user/*"
+		
 	};
 	
 	public static  final String [] ENDPOINTS_CUSTOMER ={

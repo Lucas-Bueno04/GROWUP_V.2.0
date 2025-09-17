@@ -45,6 +45,10 @@ public class EnterpriseService {
 		return mapToDto(enterprise);
 	}
 	
+	public Enterprise getEnterpriseById(Long id){
+		return enterpriseRepository.getReferenceById(id);
+	}
+	
 	public List<ResponseEnterpriseDto> getAllEntrisesByEmail(String email) {
 		User user = userRepository.findByEmail(email)
 				            .orElseThrow(() -> new RuntimeException("Não foi possível buscar o usuário por email"));
@@ -120,7 +124,7 @@ public class EnterpriseService {
 		return enterprise;
 	}
 	
-	private ResponseEnterpriseDto mapToDto(Enterprise enterprise) {
+	public ResponseEnterpriseDto mapToDto(Enterprise enterprise) {
 		return new ResponseEnterpriseDto(
 				enterprise.getId(),
 				enterprise.getCnpj(),

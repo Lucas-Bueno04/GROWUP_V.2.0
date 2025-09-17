@@ -127,6 +127,7 @@ export function EditarEmpresaDialog({
               <TabsTrigger value="dados">Dados Oficiais</TabsTrigger>
               <TabsTrigger value="classificacao">Classificação</TabsTrigger>
               <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+              
             </TabsList>
 
             {/* DADOS OFICIAIS */}
@@ -205,6 +206,10 @@ export function EditarEmpresaDialog({
                 </p>
               </div>
             </TabsContent>
+            {/* ACESSOS */}
+          
+
+
           </Tabs>
 
           <DialogFooter className="mt-6">

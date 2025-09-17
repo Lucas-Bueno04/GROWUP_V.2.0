@@ -4,6 +4,7 @@ import com.prometech.growupapi.domain.*;
 import com.prometech.growupapi.dto.*;
 
 import com.prometech.growupapi.services.BudgetService;
+import com.prometech.growupapi.services.EnterpriseUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,8 @@ public class BudgetController {
 	@Autowired
 	private BudgetService budgetService;
 	
+	@Autowired
+	private EnterpriseUserService enterpriseUserService;
 	
 	
 	@PostMapping("/create")
@@ -49,7 +52,7 @@ public class BudgetController {
 		
 		BudgetDto budget = budgetService.getBudgetById(id);
 		
-		boolean hasAccess = budgetService.userHasAccessToBudget(budget.id(), email);
+		boolean hasAccess = enterpriseUserService.userHasAcess(id, email);
 		
 		if (hasAccess) {
 			return ResponseEntity.ok(budget);

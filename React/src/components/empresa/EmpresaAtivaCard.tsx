@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building, FileText, Pencil, Trash } from "lucide-react";
+import { Building, FileText, Pencil, Trash, Key ,EyeOff} from "lucide-react";
 import { EditarEmpresaDialog } from "./EditarEmpresaDialog";
 import { DetalhesEmpresaCompleto } from "./DetalhesEmpresaCompleto";
 import { RegistrarHistoricoDialog } from "./RegistrarHistoricoDialog";
@@ -15,6 +15,7 @@ import { JwtService } from "@/components/auth/GetAuthParams";
 import { toast } from "sonner";
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
 
 const API_ENDPOINT = import.meta.env.VITE_SPRING_API;
 const jwtService = new JwtService()
@@ -41,6 +42,11 @@ interface Enterprise{
   taxRegime:string
 }
 
+interface InviteRequest{
+  idEnterprise:number, 
+  emailUser:string
+}
+
 interface EmpresaAtivaCardProps {
   empresa: Enterprise;
   onDeleteEnterprise?:()=>void;
@@ -54,12 +60,68 @@ const deleteEnterprise = async(id, token) :Promise<void>=>{
   })
 }
 
+const postInvite = async(data:InviteRequest, token:string):Promise<void>=>{
+  const response = await axios.post(`${API_ENDPOINT}/enterprise_user/create`,data,{
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
+const disableEnterpriseVisualisation = async(data:InviteRequest, token:string):Promise<void>=>{
+  const response = await axios.delete(`${API_ENDPOINT}/enterprise_user/delete`,{
+    data:data,
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+}
+
 export function EmpresaAtivaCard({ empresa,onDeleteEnterprise }: EmpresaAtivaCardProps) {
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [token , setToken] = useState(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const [inviteEmail, setInviteEmail] = useState("");
+
+  const handleInvite = async () => {
+    if(!inviteEmail || inviteEmail.trim() === ""){
+      toast({title:"E-mail inválido",description:"Por favor, insira um e-mail válido para envio do convite.",variant:"destructive"});
+      return;
+    }
+
+    try{
+      const inviteData:InviteRequest = {
+        idEnterprise:empresa.id,
+        emailUser:inviteEmail
+      }
+      await postInvite(inviteData, token);
+      toast({title:"Convite enviado",description:`Convite enviado com sucesso para ${inviteEmail}`});
+      setInviteEmail("");
+    }catch(error){
+      console.error("Erro ao enviar convite:", error);
+      toast({title:"Erro ao enviar convite",description:"Ocorreu um erro ao enviar o convite. Verifique o e-mail e tente novamente.",variant:"destructive"});
+    }
+
+  }
+
+  const handleDisable = async(idEnterprise:number) => {
+    try{
+      const disableData:InviteRequest = {
+        idEnterprise:idEnterprise,
+        emailUser:jwtService.getClaim("sub") as string | null
+      }
+      await disableEnterpriseVisualisation(disableData, token);
+      toast({title:"Empresa inabilitada",description:`A empresa ${empresa.tradeName || empresa.corporateName} foi inabilitada com sucesso.`});
+      navigate(0);
+    }
+    catch(error){
+      console.error("Erro ao inabilitar empresa:", error);
+      toast({title:"Erro ao inabilitar empresa",description:"Ocorreu um erro ao inabilitar a empresa. Tente novamente.",variant:"destructive"});
+    }
+  }
 
   useEffect(()=>{
     setToken(jwtService.getToken());
@@ -156,6 +218,64 @@ export function EmpresaAtivaCard({ empresa,onDeleteEnterprise }: EmpresaAtivaCar
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="sm" className="flex-1">
+                <Key size={14} className="mr-1" />
+                Acessos
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Acessos da Empresa</DialogTitle>
+              </DialogHeader>
+              <div className="flex gap-2 mt-4">
+                <Input
+                  type="email"
+                  placeholder="Digite o e-mail para convite"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button onClick={handleInvite}>
+                  Enviar
+                </Button>
+              </div>
+              <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={() => navigate(0)}>
+                  Fechar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="sm" className="flex-1">
+                <EyeOff size={14} className="mr-1" />
+                Inabilitar
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Inabilitar Empresa</DialogTitle>
+              </DialogHeader>
+              <p>
+                Deseja realmente inabilitar a visualização da empresa{" "}
+                <strong>{empresa.tradeName || empresa.corporateName}</strong>?
+              </p>
+              <DialogFooter className="mt-4">
+                <Button variant="outline">Cancelar</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleDisable(empresa.id)}
+                >
+                  Confirmar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
         </div>
       </CardContent>
     </Card>

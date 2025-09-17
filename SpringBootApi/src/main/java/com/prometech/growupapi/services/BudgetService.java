@@ -3,6 +3,7 @@ package com.prometech.growupapi.services;
 import com.prometech.growupapi.domain.*;
 import com.prometech.growupapi.dto.BudgetDto;
 import com.prometech.growupapi.dto.BudgetRequestDto;
+import com.prometech.growupapi.dto.ResponseEnterpriseDto;
 import com.prometech.growupapi.repositories.AccountRepository;
 import com.prometech.growupapi.repositories.BudgetRepository;
 import com.prometech.growupapi.repositories.EnterpriseRepository;
@@ -28,6 +29,12 @@ public class BudgetService {
 	@Autowired
 	private BudgetMapperService budgetMapperService;
 	
+	@Autowired
+	private EnterpriseUserService enterpriseUserService;
+	
+	@Autowired
+	private EnterpriseService enterpriseService;
+	
 	public BudgetDto getBudgetById(Long id){
 		Budget budget =  budgetRepository.findById(id)
 				                .orElseThrow(() -> new RuntimeException("Erro ao buscar orçamento"));
@@ -42,8 +49,17 @@ public class BudgetService {
 	}
 	
 	public List<BudgetDto> getAllBudgetsByUserEmail(String email){
-		List<Budget> budgets =  budgetRepository.findByEnterpriseUserEmail(email);
-		return budgets.stream().map(BudgetMapperService::toDto).toList();
+	
+		List<ResponseEnterpriseDto> enterprises = enterpriseUserService.getEnterpriseByUserEmail(email);
+		
+		List<Budget> budgets = enterprises.stream()
+				                       .map(e->enterpriseService.getEnterpriseById(e.id()))
+				                       .flatMap(ent->budgetRepository.findByEnterprise(ent).stream())
+				                       .toList();
+		
+		return  budgets.stream()
+				        .map(BudgetMapperService::toDto)
+				        .collect(Collectors.toList());
 	}
 	
 	@Transactional

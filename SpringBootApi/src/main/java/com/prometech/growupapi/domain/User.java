@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+
 
 @Entity
 @Table(name = "user")
@@ -45,4 +47,5 @@ public class User {
 	)
 	private List<Role> roles;
 	
+
 }

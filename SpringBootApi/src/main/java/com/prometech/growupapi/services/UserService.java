@@ -66,6 +66,12 @@ public class UserService {
 		
 		return new UserDto(user.getId(), user.getName(),user.getEmail(),user.getCpf(), user.getPhone(), user.getBirthDate());
 	}
+	
+	public User getUserEntityByEmail(String email){
+		
+		return userRepository.findByEmail(email)
+				            .orElseThrow( ()-> new RuntimeException("Usuario não encontrado com email !"));
+	}
 
 	public UserDto updateUser(UserDto userDto) {
 		// Busca o usuário existente pelo id
